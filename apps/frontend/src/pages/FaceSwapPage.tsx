@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FaceSwapForm } from "@/components/FaceSwapForm";
 import { MyFaceSwaps } from "@/components/MyFaceSwaps";
 import { SignedOut } from "@/components/SignedOut";
+import { PageHeader } from "@/components/PageHeader";
 
 export function FaceSwapPage() {
   const { data: session, isPending } = useSession();
@@ -30,10 +31,18 @@ export function FaceSwapPage() {
   if (!session?.user) return <SignedOut />;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="mb-6 text-2xl font-semibold">Face swap</h1>
-      <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
+    <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:py-10">
+      <PageHeader
+        eyebrow="Face swap"
+        title="Create personalized image variations in seconds."
+        description="Upload a base image and a face source, then save the generated swaps in a cleaner, easier-to-scan library."
+      />
+      <Tabs
+        value={tab}
+        onValueChange={setTab}
+        className="rounded-[2rem] border bg-card/80 p-4 shadow-xl shadow-violet-950/5 backdrop-blur sm:p-6"
+      >
+        <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl bg-muted/70 p-1 sm:w-auto">
           <TabsTrigger value="create">Create</TabsTrigger>
           <TabsTrigger value="library" onClick={loadSwaps}>
             My Swaps
