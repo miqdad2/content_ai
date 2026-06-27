@@ -1,0 +1,111 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-video_arena}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    ports:
+      - "9000:9000" # S3 API
+      - "9001:9001" # Web console
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      BACKEND_URL: ${BACKEND_URL:-http://localhost:4000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-video_arena}?schema=public
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-change-me-in-production-please-32chars}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      OPENROUTER_THUMBNAIL_MODEL: ${OPENROUTER_THUMBNAIL_MODEL:-google/gemini-3.1-flash-image}
+      FACEFUSION_URL: ${FACEFUSION_URL:-http://facefusion:7865}
+      MINIO_ENDPOINT: minio
+      MINIO_FRONTEND_ENDPOINT: ${MINIO_FRONTEND_ENDPOINT:-localhost}
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: "false"
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-video-arena}
+    ports:
+      - "4000:4000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      args:
+        VITE_API_URL: ${BACKEND_URL:-http://localhost:4000}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+  # Self-hosted FaceFusion face-swap service (HTTP wrapper around FaceFusion's
+  # `headless-run` CLI — see infra/facefusion). Started only with the
+  # "facefusion" profile because the image is large (~5GB) and pulls models on
+  # first use:
+  #   docker compose --profile facefusion up -d facefusion
+  # Swap API: http://localhost:7865/swap
+  facefusion:
+    build:
+      context: .
+      dockerfile: infra/facefusion/Dockerfile
+    restart: unless-stopped
+    profiles: ["facefusion"]
+    ports:
+      - "7865:7865"
+    volumes:
+      # Persists downloaded models across restarts; pre-pulled on first boot.
+      - facefusion_data:/facefusion/.assets
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:7865/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      # The first boot pre-downloads models before the API starts; give it room.
+      start_period: 600s
+
+volumes:
+  postgres_data:
+  minio_data:
+  facefusion_data:

@@ -1,0 +1,337 @@
+// Prisma schema for video-arena
+// Docs: https://www.prisma.io/docs
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Auth models (better-auth)
+// These models match the schema expected by better-auth's Prisma adapter.
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String     @id
+  name          String
+  email         String     @unique
+  emailVerified Boolean    @default(false)
+  image         String?
+  // "user" (default) or "admin". Admins can create video templates. Seeded from
+  // the ADMIN_EMAILS allowlist on first authenticated request (see middleware/admin).
+  role          String     @default("user")
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  videos        Video[]
+  images        Image[]
+  faceSwaps     FaceSwap[]
+  avatars       Avatar[]
+  templates     Template[]       @relation("TemplateCreator")
+  templateRenders TemplateRender[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification")
+}
+
+// ---------------------------------------------------------------------------
+// Application models
+// ---------------------------------------------------------------------------
+
+// Shared lifecycle status for every kind of generation (video, image, face swap).
+enum GenerationStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+model Video {
+  id     String           @id @default(cuid())
+  userId String
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status GenerationStatus @default(PENDING)
+
+  // Generation parameters
+  prompt        String
+  model         String
+  duration      Int?
+  resolution    String?
+  aspectRatio   String?
+  generateAudio Boolean?
+
+  // Object-store keys (MinIO). Inputs uploaded by the user and the final output.
+  startFrameKey      String?
+  endFrameKey        String?
+  referenceFrameKeys String[] @default([])
+  videoKey           String?
+
+  // OpenRouter bookkeeping
+  providerJobId String?
+  cost          Float?
+  error         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("video")
+}
+
+model Image {
+  id     String           @id @default(cuid())
+  userId String
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status GenerationStatus @default(PENDING)
+
+  // Generation parameters
+  prompt      String
+  model       String
+  resolution  String?
+  aspectRatio String?
+
+  // Object-store keys (MinIO). Optional reference inputs and the final output.
+  referenceImageKeys String[] @default([])
+  imageKey           String?
+
+  // OpenRouter bookkeeping
+  providerJobId String?
+  cost          Float?
+  error         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("image")
+}
+
+model FaceSwap {
+  id     String           @id @default(cuid())
+  userId String
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status GenerationStatus @default(PENDING)
+
+  // Object-store keys (MinIO). The base image, the face to apply, and the result.
+  sourceKey String // the face to apply
+  targetKey String // the base image being modified
+  outputKey String?
+
+  error String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("face_swap")
+}
+
+// ---------------------------------------------------------------------------
+// Video templates
+//
+// An Avatar is a user's likeness, built from 1-2 photos. The primary photo is
+// used both as the FaceFusion source (to swap onto block frames) and as an
+// OpenRouter reference image (to keep the person consistent across blocks).
+//
+// A Template is an admin-authored, longer-form video composed of an ordered set
+// of TemplateBlocks (each a short prompt-driven clip) laid out on a Premiere-pro
+// style timeline over a single base audio track. Templates declare 1-2 avatar
+// "slots"; each block targets a slot. Rendering a template generates every block
+// (face-swapping the avatar onto start/end frames when enabled), stitches the
+// clips together over the audio, and produces a final video + thumbnail.
+// ---------------------------------------------------------------------------
+
+model Avatar {
+  id     String           @id @default(cuid())
+  userId String
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status GenerationStatus @default(COMPLETED)
+
+  name String
+
+  // Object-store keys (MinIO). The uploaded source photos (1-2) and the primary
+  // face image used for swaps + references (defaults to the first source photo).
+  sourceImageKeys String[] @default([])
+  faceKey         String?
+
+  error String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  templateRenders TemplateRender[]
+
+  @@index([userId])
+  @@map("avatar")
+}
+
+model Template {
+  id        String @id @default(cuid())
+  creatorId String
+  creator   User   @relation("TemplateCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+
+  // Number of avatar slots (1 or 2) a user must fill when rendering.
+  avatarSlots Int @default(1)
+
+  // The admin's own avatars assigned to the slots (in slot order). These are the
+  // "Avatar 1"/"Avatar 2" referenced by blocks and used for the admin's export.
+  avatarIds String[] @default([])
+
+  // Whether the template is finalised/exported and visible to users.
+  published Boolean @default(false)
+
+  // Base audio track + total timeline length (seconds).
+  audioKey    String?
+  durationSec Float?
+
+  // Export outputs: the admin's reference render + its thumbnail, shown to users.
+  previewVideoKey String?
+  thumbnailKey    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  blocks  TemplateBlock[]
+  renders TemplateRender[]
+
+  @@index([creatorId])
+  @@map("template")
+}
+
+model TemplateBlock {
+  id         String   @id @default(cuid())
+  templateId String
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  // Position on the timeline (seconds) and rendering order.
+  order    Int
+  startSec Float
+  endSec   Float
+
+  // Which video track (lane) this block sits on. Higher tracks render on top:
+  // where blocks overlap in time, the highest-track block wins.
+  track Int @default(0)
+
+  // Generation parameters for this clip.
+  prompt      String
+  model       String
+  // Length (seconds) the model generates. The block's timeline footprint equals
+  // this duration (endSec = startSec + duration); models only accept specific
+  // durations, so this is constrained per-model in the UI.
+  duration    Int?
+  resolution  String?
+  aspectRatio String?
+
+  // Object-store keys (MinIO) for this block's base start/end frames.
+  startImageKey String?
+  endImageKey   String?
+
+  // Object-store key (MinIO) for this block's individually "baked" preview clip,
+  // generated on demand so the admin can preview a single block on the timeline.
+  videoKey String?
+
+  // Crop window (Premiere-style) into the generated clip. The full clip is still
+  // `duration` seconds long; only [cropStart, cropEnd) is used on the timeline +
+  // in the render. cropEnd null means "to the end" (= duration). The block's
+  // footprint is endSec - startSec = (cropEnd ?? duration) - cropStart.
+  cropStart Float  @default(0)
+  cropEnd   Float?
+
+  // Copy/paste link: blocks sharing a linkGroupId share generation content
+  // (prompt, model, frames, baked clip, …) so editing/re-baking one updates all.
+  linkGroupId String?
+
+  // Which template avatar slot (0-based) this block uses. The avatar is always
+  // passed as the OpenRouter reference image, and is the face-swap source when
+  // faceSwapStart/faceSwapEnd are enabled (no per-block image re-uploads).
+  faceSwapStart Boolean @default(false)
+  faceSwapEnd   Boolean @default(false)
+  avatarSlot    Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([templateId])
+  @@index([linkGroupId])
+  @@map("template_block")
+}
+
+model TemplateRender {
+  id         String           @id @default(cuid())
+  templateId String
+  template   Template         @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status     GenerationStatus @default(PENDING)
+
+  // The avatars filling the template's slots, in slot order.
+  avatarIds String[] @default([])
+
+  // Object-store keys (MinIO) for the stitched video + its thumbnail.
+  videoKey     String?
+  thumbnailKey String?
+
+  cost  Float?
+  error String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Avatars referenced by this render (so they can't be deleted out from under it).
+  avatars Avatar[]
+
+  @@index([templateId])
+  @@index([userId])
+  @@map("template_render")
+}
