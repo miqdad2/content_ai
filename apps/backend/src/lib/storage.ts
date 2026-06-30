@@ -63,6 +63,11 @@ export async function uploadBuffer(
   const key = `${prefix}/${randomUUID()}${ext}`;
   await minio.putObject(BUCKET, key, buffer, buffer.length, {
     "Content-Type": contentType,
+    // Mark each object public-read so it's fetchable by its permanent URL. On
+    // hosted stores (e.g. DigitalOcean Spaces) a bucket-wide public policy often
+    // can't be set with a scoped key, so we grant read per object instead. On
+    // local MinIO this is harmless (the bucket policy already allows reads).
+    "x-amz-acl": "public-read",
   });
   return key;
 }
