@@ -39,7 +39,7 @@ export function Navbar() {
             <Sparkles className="h-4 w-4" />
           </span>
           <span className="hidden text-[15px] font-semibold tracking-tight sm:inline">
-            Video Arena
+            Pixovid
           </span>
         </Link>
 

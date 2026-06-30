@@ -2,7 +2,7 @@ name: Build and push images
 
 # Builds the backend and frontend Docker images and pushes them to Docker Hub.
 # The frontend bakes VITE_API_URL at build time, so production must build with the
-# production API origin (https://api.video.100xdevs.com).
+# production API origin (https://api.pixovid.com).
 #
 # Required repository secrets:
 #   DOCKERHUB_USERNAME  - Docker Hub user/org with push access to 100xdevs/*
@@ -23,7 +23,7 @@ on:
 
 env:
   REGISTRY_NAMESPACE: 100xdevs
-  FRONTEND_API_URL: https://api.video.100xdevs.com
+  FRONTEND_API_URL: https://api.pixovid.com
 
 jobs:
   build-and-push:

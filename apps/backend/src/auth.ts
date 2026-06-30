@@ -13,6 +13,12 @@ const socialProviders =
       }
     : undefined;
 
+// When the API is served over HTTPS the frontend may live on a different
+// registrable domain than the API (e.g. video.100xdevs.com calling
+// api.pixovid.com), so session cookies must be SameSite=None; Secure to be sent
+// cross-site. On http (local dev) keep the default (Lax) since None requires Secure.
+const useCrossSiteCookies = env.BACKEND_URL.startsWith("https://");
+
 export const auth = betterAuth({
   baseURL: env.BACKEND_URL,
   secret: env.BETTER_AUTH_SECRET,
@@ -25,7 +31,15 @@ export const auth = betterAuth({
     requireEmailVerification: false,
   },
   socialProviders,
-  trustedOrigins: [env.FRONTEND_URL],
+  // env.FRONTEND_URL is a list of allowed origins (multiple domains).
+  trustedOrigins: env.FRONTEND_URL,
+  ...(useCrossSiteCookies
+    ? {
+        advanced: {
+          defaultCookieAttributes: { sameSite: "none" as const, secure: true },
+        },
+      }
+    : {}),
 });
 
 export type Session = typeof auth.$Infer.Session;

@@ -20,6 +20,7 @@ const app = express();
 
 app.use(
   cors({
+    // env.FRONTEND_URL is a list of allowed origins (multiple domains).
     origin: env.FRONTEND_URL,
     credentials: true,
   }),

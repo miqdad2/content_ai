@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 
-const CONTACT_EMAIL = "support@videoarena.app";
+const CONTACT_EMAIL = "harkirat.iitr@gmail.com";
 
 const PRODUCT_LINKS = [
   { to: "/video", label: "Video" },
@@ -26,7 +26,7 @@ export function Footer() {
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Sparkles className="h-4 w-4" />
             </span>
-            <span className="text-[15px] font-semibold tracking-tight">Video Arena</span>
+            <span className="text-[15px] font-semibold tracking-tight">Pixovid</span>
           </Link>
           <p className="mt-3 max-w-xs text-sm text-muted-foreground">
             The arena where AI video comes to life. Generate cinematic video, images and
@@ -80,7 +80,7 @@ export function Footer() {
 
       <div className="border-t border-white/[0.06]">
         <div className="mx-auto flex max-w-[1600px] flex-col items-center justify-between gap-2 px-4 py-5 text-xs text-muted-foreground sm:flex-row lg:px-6">
-          <span>© {new Date().getFullYear()} Video Arena. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} Pixovid. All rights reserved.</span>
           <div className="flex items-center gap-4">
             {LEGAL_LINKS.map((l) => (
               <Link key={l.to} to={l.to} className="transition-colors hover:text-foreground">

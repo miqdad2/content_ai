@@ -85,7 +85,7 @@ export function AuthForm({ onSuccess, callbackURL }: AuthFormProps) {
           <Sparkles className="h-5 w-5" />
         </span>
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Welcome to Video Arena</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Welcome to Pixovid</h2>
           <p className="mt-1 text-sm text-muted-foreground">Sign up and generate for free</p>
         </div>
       </div>

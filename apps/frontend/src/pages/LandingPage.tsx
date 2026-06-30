@@ -9,7 +9,7 @@ import { useSession } from "@/lib/auth-client";
  * Higgsfield-style landing page.
  *
  * A featured carousel of cinematic AI clips sits above a dense, autoplaying
- * masonry wall. Every clip is real Video Arena output generated on OpenRouter
+ * masonry wall. Every clip is real Pixovid output generated on OpenRouter
  * and stored in apps/frontend/public/showcase (regenerate via
  * `bun run --cwd apps/backend scripts/generate-showcase.ts`).
  */
@@ -338,7 +338,7 @@ export function LandingPage() {
       <section className="mx-auto max-w-[1600px] px-4 pt-12 pb-8 lg:px-6">
         <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-sm text-muted-foreground">
           <Sparkles className="h-4 w-4 text-primary" />
-          Real clips, real prompts — generated in Video Arena
+          Real clips, real prompts — generated in Pixovid
         </div>
         <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
           The arena where <span className="text-primary">AI video</span> comes to life.

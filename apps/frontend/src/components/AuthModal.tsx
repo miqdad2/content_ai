@@ -39,7 +39,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                 Kling 3.0 &amp; Seedance 2.0
               </h3>
               <p className="mt-1 text-sm text-white/80">
-                The best video models, for the best price — only on Video Arena.
+                The best video models, for the best price — only on Pixovid.
               </p>
             </div>
           </div>

@@ -62,7 +62,7 @@ export function BillingPage() {
           key: order.razorpayKeyId,
           amount: order.amount,
           currency: order.currency,
-          name: "Video Arena",
+          name: "Pixovid",
           description: `${order.packName} — ${order.credits} credits`,
           order_id: order.orderId,
           prefill: { email: session?.user?.email, name: session?.user?.name ?? undefined },

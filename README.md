@@ -1,4 +1,4 @@
-# Video Arena
+# Pixovid
 
 A generative-media SaaS. Users sign in and can:
 

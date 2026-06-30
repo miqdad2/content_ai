@@ -7,8 +7,19 @@ const envSchema = z.object({
 
   // Public URL the backend is reachable at (used for auth callbacks).
   BACKEND_URL: z.string().url().default("http://localhost:4000"),
-  // Frontend origin, used for CORS + auth trusted origins.
-  FRONTEND_URL: z.string().url().default("http://localhost:5173"),
+  // Frontend origin(s), used for CORS + auth trusted origins. Accepts a
+  // comma-separated list so the app can be served from multiple domains
+  // (e.g. "https://pixovid.com,https://video.100xdevs.com").
+  FRONTEND_URL: z
+    .string()
+    .default("http://localhost:5173")
+    .transform((v) =>
+      v
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+    )
+    .pipe(z.array(z.string().url()).min(1)),
 
   DATABASE_URL: z.string().url(),
 
