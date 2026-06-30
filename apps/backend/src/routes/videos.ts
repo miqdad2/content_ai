@@ -5,6 +5,7 @@ import { requireAuth, type AuthedRequest } from "../middleware/requireAuth.js";
 import { generateVideo } from "../lib/openrouter.js";
 import { getPublicUrl, uploadBuffer } from "../lib/storage.js";
 import { extFromMime, toDataUrl, upload } from "../lib/uploads.js";
+import { actionCost, getBalance, refundCredits, spendCredits } from "../lib/credits.js";
 
 export const videosRouter: Router = Router();
 
@@ -71,6 +72,14 @@ videosRouter.post(
     }
     const { prompt, model, duration, resolution, aspectRatio, generateAudio } = parsed.data;
 
+    // Credits: fixed price per video. Reject up front if the user can't afford it
+    // (avoids wasting input uploads), then charge once the row exists.
+    const cost = actionCost("video");
+    if ((await getBalance(req.userId!)) < cost) {
+      res.status(402).json({ error: `Not enough credits. This video costs ${cost} credits.` });
+      return;
+    }
+
     const files = (req.files ?? {}) as UploadedFiles;
     const startFrame = files.startFrame?.[0];
     const endFrame = files.endFrame?.[0];
@@ -106,6 +115,23 @@ videosRouter.post(
       },
     });
 
+    // 2b. Charge credits now that we have a row to reference. A race could make
+    // this fail even after the up-front check; if so, mark the row failed + 402.
+    try {
+      await spendCredits(req.userId!, cost, {
+        referenceType: "video",
+        referenceId: video.id,
+        description: "Video generation",
+      });
+    } catch {
+      await prisma.video.update({
+        where: { id: video.id },
+        data: { status: "FAILED", error: "Not enough credits." },
+      });
+      res.status(402).json({ error: `Not enough credits. This video costs ${cost} credits.` });
+      return;
+    }
+
     // 3. Generate synchronously via OpenRouter, then store the output.
     try {
       const generated = await generateVideo({
@@ -135,6 +161,12 @@ videosRouter.post(
     } catch (err) {
       const message = err instanceof Error ? err.message : "Video generation failed";
       console.error("Video generation failed:", message);
+      // Refund the credits we charged — the user got nothing.
+      await refundCredits(req.userId!, cost, {
+        referenceType: "video",
+        referenceId: video.id,
+        description: "Refund: video generation failed",
+      });
       const failed = await prisma.video.update({
         where: { id: video.id },
         data: { status: "FAILED", error: message },

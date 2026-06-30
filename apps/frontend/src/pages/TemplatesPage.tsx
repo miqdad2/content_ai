@@ -6,15 +6,14 @@ import {
   type Template,
   type TemplateRender,
 } from "@/lib/api";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TemplateGallery } from "@/components/TemplateGallery";
 import { MyTemplateRenders } from "@/components/MyTemplateRenders";
 import { SignedOut } from "@/components/SignedOut";
-import { PageHeader } from "@/components/PageHeader";
+import { cn } from "@/lib/utils";
 
 export function TemplatesPage() {
   const { data: session, isPending } = useSession();
-  const [tab, setTab] = useState("browse");
+  const [tab, setTab] = useState<"browse" | "library">("browse");
 
   const [templates, setTemplates] = useState<Template[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(false);
@@ -49,26 +48,50 @@ export function TemplatesPage() {
   if (isPending) return null;
   if (!session?.user) return <SignedOut />;
 
-  return (
-    <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:py-10">
-      <PageHeader
-        eyebrow="Template gallery"
-        title="Render reusable videos with your own avatars."
-        description="Browse approved templates, select the right avatar slots and keep finished renders in your video library."
-      />
-      <Tabs
-        value={tab}
-        onValueChange={setTab}
-        className="rounded-[2rem] border bg-card/80 p-4 shadow-xl shadow-violet-950/5 backdrop-blur sm:p-6"
-      >
-        <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl bg-muted/70 p-1 sm:w-auto">
-          <TabsTrigger value="browse">Browse</TabsTrigger>
-          <TabsTrigger value="library" onClick={loadRenders}>
-            My Videos
-          </TabsTrigger>
-        </TabsList>
+  const tabClass = (active: boolean) =>
+    cn(
+      "-mb-px border-b-2 px-1 pb-2.5 text-sm font-semibold transition-colors",
+      active
+        ? "border-primary text-foreground"
+        : "border-transparent text-muted-foreground hover:text-foreground",
+    );
 
-        <TabsContent value="browse">
+  return (
+    <div className="mx-auto max-w-[1600px] px-4 py-6 lg:px-6">
+      {/* Hero */}
+      <div className="relative mb-6 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-primary/15 via-card to-card p-6 sm:p-10">
+        <div className="pointer-events-none absolute -right-10 -top-16 h-64 w-64 rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 left-1/3 h-56 w-56 rounded-full bg-brand-2/10 blur-3xl" />
+        <span className="relative text-xs font-bold uppercase tracking-[0.22em] text-primary">
+          Templates
+        </span>
+        <h1 className="relative mt-2 max-w-2xl text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+          Star in a <span className="text-primary">famous video</span>.
+        </h1>
+        <p className="relative mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
+          Pick a template, choose your avatar, and we render you straight into the scene — face,
+          lighting and motion handled for you.
+        </p>
+      </div>
+
+      {/* Tab bar */}
+      <div className="mb-6 flex items-center gap-5 border-b border-white/[0.08]">
+        <button className={tabClass(tab === "browse")} onClick={() => setTab("browse")}>
+          Browse templates
+        </button>
+        <button
+          className={tabClass(tab === "library")}
+          onClick={() => {
+            setTab("library");
+            loadRenders();
+          }}
+        >
+          My renders
+        </button>
+      </div>
+
+      <div className="min-h-[55vh]">
+        {tab === "browse" ? (
           <TemplateGallery
             templates={templates}
             loading={templatesLoading}
@@ -78,16 +101,10 @@ export function TemplatesPage() {
               setTab("library");
             }}
           />
-        </TabsContent>
-
-        <TabsContent value="library">
-          <MyTemplateRenders
-            renders={renders}
-            loading={rendersLoading}
-            error={rendersError}
-          />
-        </TabsContent>
-      </Tabs>
+        ) : (
+          <MyTemplateRenders renders={renders} loading={rendersLoading} error={rendersError} />
+        )}
+      </div>
     </div>
   );
 }

@@ -77,7 +77,7 @@ function Preview({ label, file }: { label: string; file: File | null }) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <div className="aspect-square overflow-hidden rounded-md border bg-muted">
+      <div className="aspect-square overflow-hidden rounded-lg border bg-black/40">
         {url ? (
           <img src={url} alt={label} className="h-full w-full object-cover" />
         ) : (

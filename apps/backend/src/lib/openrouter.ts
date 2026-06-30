@@ -23,6 +23,19 @@ export interface VideoModel {
   supported_sizes?: string[];
   /** Discrete clip lengths (seconds) the model accepts, e.g. veo-3.1 → [4, 6, 8]. */
   supported_durations?: number[];
+  /** True if the model honors an audio input reference (for audio-driven lip-sync). */
+  supportsAudioInput?: boolean;
+  /** True if the model accepts reference images (usable as a face-swap edit model). */
+  supportsReferences?: boolean;
+}
+
+/**
+ * Whether a video model honors an audio `input_references` entry (audio-driven
+ * lip-sync). Per OpenRouter, audio references are currently only honored by
+ * BytePlus/ByteDance Seedance 2.0. Update this as more providers add support.
+ */
+export function supportsAudioLipsync(modelId: string): boolean {
+  return /seedance-2/i.test(modelId);
 }
 
 /** List the video-generation models available on OpenRouter. */
@@ -34,7 +47,7 @@ export async function listVideoModels(): Promise<VideoModel[]> {
     throw new Error(`Failed to list video models: ${res.status} ${await res.text()}`);
   }
   const json = (await res.json()) as { data?: VideoModel[] };
-  return json.data ?? [];
+  return (json.data ?? []).map((m) => ({ ...m, supportsAudioInput: supportsAudioLipsync(m.id) }));
 }
 
 interface ImageRef {
@@ -76,7 +89,29 @@ export async function listImageModels(): Promise<VideoModel[]> {
     description: m.description,
     supported_resolutions: m.supported_parameters?.resolution?.values,
     supported_aspect_ratios: m.supported_parameters?.aspect_ratio?.values,
+    supportsReferences: !!m.supported_parameters?.input_references,
   }));
+}
+
+/** A selectable face-swap model: the local FaceFusion service or an OpenRouter edit model. */
+export interface SwapModelOption {
+  /** "facefusion" for the local service, otherwise an OpenRouter image model id. */
+  id: string;
+  name: string;
+  /** True for the local (FaceFusion) option. */
+  local: boolean;
+}
+
+/**
+ * The face-swap models the admin can choose per block: the local FaceFusion
+ * service plus every OpenRouter image model that accepts reference images.
+ */
+export async function listSwapModels(): Promise<SwapModelOption[]> {
+  const images = await listImageModels();
+  const openrouter = images
+    .filter((m) => m.supportsReferences)
+    .map((m) => ({ id: m.id, name: m.name, local: false }));
+  return [{ id: "facefusion", name: "FaceFusion (local)", local: true }, ...openrouter];
 }
 
 export interface GenerateImageParams {
@@ -158,6 +193,51 @@ export async function generateImage(params: GenerateImageParams): Promise<Genera
   throw new Error(message);
 }
 
+const asDataUrl = (buffer: Buffer, mime: string) => `data:${mime};base64,${buffer.toString("base64")}`;
+
+export interface SwapFaceParams {
+  model: string;
+  /** The face to apply (avatar). */
+  face: { buffer: Buffer; mime: string };
+  /** The frame being edited (the face is swapped onto this). */
+  frame: { buffer: Buffer; mime: string };
+  /** Optional natural-language guidance, e.g. "keep the soft window lighting". */
+  context?: string;
+  aspectRatio?: string;
+}
+
+/**
+ * Face swap via a diffusion image-edit model (e.g. FLUX.2): the frame is the base
+ * image and the avatar is a reference, so the model re-renders the frame with the
+ * person's face. Unlike FaceFusion this accepts a `context` prompt.
+ */
+export async function swapFaceWithImageModel(params: SwapFaceParams): Promise<GeneratedImage> {
+  const base =
+    "You are given two images. IMAGE 1 is the scene to edit. IMAGE 2 is a reference photo of a " +
+    "different person. Task: change the identity of the main face in IMAGE 1 so it becomes the " +
+    "person from IMAGE 2 — copy IMAGE 2's facial features, bone structure, eyes, nose, mouth and " +
+    "overall likeness. " +
+    "Keep EVERYTHING ELSE from IMAGE 1 unchanged: the body, pose, the existing hair and beard, " +
+    "clothing, framing, camera angle, lighting and background. " +
+    "Do NOT import the hair, beard, glasses/sunglasses or accessories from IMAGE 2, and do not add " +
+    "any that aren't already in IMAGE 1. " +
+    "Match the skin tone and color to IMAGE 1's lighting so the face blends seamlessly. " +
+    "Output a photorealistic result with a natural, neutral expression and change nothing other " +
+    "than the facial identity. Preserve IMAGE 1's exact framing and aspect ratio.";
+  const prompt = params.context?.trim()
+    ? `${base}\n\nAdditional guidance from the creator: ${params.context.trim()}`
+    : base;
+  return generateImage({
+    model: params.model,
+    prompt,
+    aspectRatio: params.aspectRatio,
+    references: [
+      { url: asDataUrl(params.frame.buffer, params.frame.mime) },
+      { url: asDataUrl(params.face.buffer, params.face.mime) },
+    ],
+  });
+}
+
 export interface GenerateVideoParams {
   model: string;
   prompt: string;
@@ -168,6 +248,8 @@ export interface GenerateVideoParams {
   firstFrame?: ImageRef;
   lastFrame?: ImageRef;
   references?: ImageRef[];
+  /** Audio track the video should lip-sync to (only honored by capable models). */
+  audioReference?: { url: string };
 }
 
 export interface GeneratedVideo {
@@ -224,12 +306,15 @@ export async function generateVideo(params: GenerateVideoParams): Promise<Genera
   }
   if (frameImages.length > 0) body.frame_images = frameImages;
 
-  if (params.references && params.references.length > 0) {
-    body.input_references = params.references.map((ref) => ({
-      type: "image_url",
-      image_url: { url: ref.url },
-    }));
+  const inputReferences: unknown[] = (params.references ?? []).map((ref) => ({
+    type: "image_url",
+    image_url: { url: ref.url },
+  }));
+  // Audio reference for lip-sync (honored only by capable models, e.g. Seedance 2.0).
+  if (params.audioReference) {
+    inputReferences.push({ type: "audio_url", audio_url: { url: params.audioReference.url } });
   }
+  if (inputReferences.length > 0) body.input_references = inputReferences;
 
   // Step 1: submit
   const submitRes = await fetch(`${BASE_URL}/videos`, {

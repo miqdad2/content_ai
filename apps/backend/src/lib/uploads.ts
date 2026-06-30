@@ -17,6 +17,16 @@ export const audioUpload = multer({
 });
 
 /**
+ * Multer instance for template-block uploads, which may include a raw video the
+ * admin wants to use as-is (instead of an AI-generated clip). Videos can be much
+ * larger than images, so allow a higher per-file size.
+ */
+export const videoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 500 * 1024 * 1024 }, // 500MB (covers uploaded video clips)
+});
+
+/**
  * Express error-handling middleware that turns multer failures (e.g. a file that
  * exceeds the size limit) into a clean 400 JSON response instead of crashing the
  * request with an opaque stack trace.

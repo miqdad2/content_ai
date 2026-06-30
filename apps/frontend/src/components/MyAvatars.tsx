@@ -30,10 +30,17 @@ export function MyAvatars({ avatars, loading, error, onDelete }: Props) {
   return (
     <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
       {avatars.map((avatar) => (
-        <Card key={avatar.id} className="overflow-hidden">
-          <div className="aspect-square bg-muted">
+        <Card
+          key={avatar.id}
+          className="group overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-white/15 hover:shadow-xl hover:shadow-black/40"
+        >
+          <div className="aspect-square overflow-hidden bg-black/40">
             {avatar.faceUrl ? (
-              <img src={avatar.faceUrl} alt={avatar.name} className="h-full w-full object-cover" />
+              <img
+                src={avatar.faceUrl}
+                alt={avatar.name}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
             ) : (
               <div className="flex h-full items-center justify-center text-muted-foreground">
                 <User className="h-8 w-8" />

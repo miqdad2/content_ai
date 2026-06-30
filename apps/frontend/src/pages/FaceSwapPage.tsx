@@ -40,9 +40,9 @@ export function FaceSwapPage() {
       <Tabs
         value={tab}
         onValueChange={setTab}
-        className="rounded-[2rem] border bg-card/80 p-4 shadow-xl shadow-violet-950/5 backdrop-blur sm:p-6"
+        className="rounded-3xl border border-white/[0.08] bg-card/50 p-4 shadow-xl shadow-black/20 backdrop-blur-xl sm:p-6"
       >
-        <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl bg-muted/70 p-1 sm:w-auto">
+        <TabsList className="grid h-auto w-full grid-cols-2 rounded-xl border border-white/[0.06] bg-white/[0.03] p-1 sm:w-auto">
           <TabsTrigger value="create">Create</TabsTrigger>
           <TabsTrigger value="library" onClick={loadSwaps}>
             My Swaps

@@ -5,6 +5,7 @@ import { requireAuth, type AuthedRequest } from "../middleware/requireAuth.js";
 import { generateImage } from "../lib/openrouter.js";
 import { getPublicUrl, uploadBuffer } from "../lib/storage.js";
 import { extFromMime, toDataUrl, upload } from "../lib/uploads.js";
+import { actionCost, getBalance, refundCredits, spendCredits } from "../lib/credits.js";
 
 export const imagesRouter: Router = Router();
 
@@ -58,6 +59,13 @@ imagesRouter.post(
     }
     const { prompt, model, resolution, aspectRatio } = parsed.data;
 
+    // Credits: fixed price per image. Reject up front if unaffordable.
+    const cost = actionCost("image");
+    if ((await getBalance(req.userId!)) < cost) {
+      res.status(402).json({ error: `Not enough credits. This image costs ${cost} credits.` });
+      return;
+    }
+
     const files = (req.files ?? {}) as Record<string, Express.Multer.File[] | undefined>;
     const referenceImages = files.referenceImages ?? [];
 
@@ -78,6 +86,22 @@ imagesRouter.post(
         status: "IN_PROGRESS",
       },
     });
+
+    // 2b. Charge credits now that the row exists (refunded on failure below).
+    try {
+      await spendCredits(req.userId!, cost, {
+        referenceType: "image",
+        referenceId: image.id,
+        description: "Image generation",
+      });
+    } catch {
+      await prisma.image.update({
+        where: { id: image.id },
+        data: { status: "FAILED", error: "Not enough credits." },
+      });
+      res.status(402).json({ error: `Not enough credits. This image costs ${cost} credits.` });
+      return;
+    }
 
     // 3. Generate synchronously via OpenRouter, then store the output.
     try {
@@ -100,6 +124,11 @@ imagesRouter.post(
     } catch (err) {
       const message = err instanceof Error ? err.message : "Image generation failed";
       console.error("Image generation failed:", message);
+      await refundCredits(req.userId!, cost, {
+        referenceType: "image",
+        referenceId: image.id,
+        description: "Refund: image generation failed",
+      });
       const failed = await prisma.image.update({
         where: { id: image.id },
         data: { status: "FAILED", error: message },

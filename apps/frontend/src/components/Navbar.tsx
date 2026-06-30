@@ -1,26 +1,23 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import {
-  Images,
-  LayoutTemplate,
-  LogOut,
-  Sparkles,
-  UserRound,
-  Video as VideoIcon,
-  Wand2,
-} from "lucide-react";
+import { Coins, LogOut, Sparkles, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { signOut, useSession } from "@/lib/auth-client";
 import { useMe } from "@/lib/useMe";
 import { AuthModal } from "./AuthModal";
 
-const NAV_LINKS = [
-  { to: "/video", label: "Video", icon: VideoIcon },
-  { to: "/image", label: "Image", icon: Images },
-  { to: "/face-swap", label: "Face Swap", icon: Wand2 },
-  { to: "/user/templates", label: "Templates", icon: LayoutTemplate },
-  { to: "/user/avatar", label: "Avatar", icon: UserRound },
+interface NavLink {
+  to: string;
+  label: string;
+  badge?: string;
+}
+
+const NAV_LINKS: NavLink[] = [
+  { to: "/video", label: "Video" },
+  { to: "/image", label: "Image" },
+  { to: "/user/templates", label: "Templates", badge: "New" },
+  { to: "/user/avatar", label: "Avatar" },
 ];
 
 export function Navbar() {
@@ -29,48 +26,73 @@ export function Navbar() {
   const [authOpen, setAuthOpen] = useState(false);
   const location = useLocation();
 
-  const links = me?.isAdmin
-    ? [
-        ...NAV_LINKS,
-        { to: "/admin/template/create", label: "Admin", icon: Sparkles },
-      ]
+  const links: NavLink[] = me?.isAdmin
+    ? [...NAV_LINKS, { to: "/admin/template/create", label: "Admin" }]
     : NAV_LINKS;
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/75 backdrop-blur-xl">
-      <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <div className="flex min-w-0 flex-1 items-center gap-5">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-black">
+      <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-6 px-4 lg:px-6">
+        {/* Logo */}
+        <Link to="/" className="flex shrink-0 items-center gap-2.5">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Sparkles className="h-4 w-4" />
+          </span>
+          <span className="hidden text-[15px] font-semibold tracking-tight sm:inline">
+            Video Arena
+          </span>
+        </Link>
+
+        {/* Primary nav */}
+        <nav className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
           <Link
             to="/"
-            className="flex shrink-0 items-center gap-2 font-semibold tracking-tight"
+            className={cn(
+              "shrink-0 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors",
+              location.pathname === "/"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground",
+            )}
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-violet-950/15">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            <span className="hidden sm:inline">Video Arena</span>
+            Explore
           </Link>
-          <nav className="flex min-w-0 items-center gap-1 overflow-x-auto rounded-full border bg-card/70 p-1 shadow-sm backdrop-blur">
-            {links.map(({ to, label, icon: Icon }) => (
-              <Link
-                key={to}
-                to={to}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
-                  location.pathname === to
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                <span className="whitespace-nowrap">{label}</span>
-              </Link>
-            ))}
-          </nav>
-        </div>
+          {links.map(({ to, label, badge }) => (
+            <Link
+              key={to}
+              to={to}
+              className={cn(
+                "flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors",
+                location.pathname === to
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <span className="whitespace-nowrap">{label}</span>
+              {badge && (
+                <span className="rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold leading-none text-primary-foreground">
+                  {badge}
+                </span>
+              )}
+            </Link>
+          ))}
+        </nav>
 
-        <div className="flex items-center gap-3">
+        {/* Right cluster */}
+        <div className="flex shrink-0 items-center gap-3">
           {isPending ? null : session?.user ? (
             <>
+              <Link
+                to="/billing"
+                title="Credits & billing"
+                className={cn(
+                  "flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm font-medium transition-colors hover:bg-white/[0.08]",
+                  location.pathname === "/billing" && "border-primary/40 text-primary",
+                )}
+              >
+                <Coins className="h-4 w-4 text-primary" />
+                <span className="tabular-nums">{me?.credits ?? 0}</span>
+                <span className="hidden text-muted-foreground sm:inline">credits</span>
+              </Link>
               <div className="flex items-center gap-2">
                 {session.user.image ? (
                   <img
@@ -87,19 +109,34 @@ export function Navbar() {
                   {session.user.name}
                 </span>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => signOut()}
-                title="Sign out"
-              >
+              <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sign out">
                 <LogOut className="h-4 w-4" />
               </Button>
             </>
           ) : (
-            <Button className="rounded-full" onClick={() => setAuthOpen(true)}>
-              Sign in
-            </Button>
+            <>
+              <Link
+                to="/billing"
+                className="relative hidden items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-white/[0.08] sm:flex"
+              >
+                <Tag className="h-3.5 w-3.5" />
+                Pricing
+                <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-2 px-1.5 py-px text-[9px] font-bold leading-none text-white">
+                  30% OFF
+                </span>
+              </Link>
+              <span className="hidden h-5 w-px bg-white/10 sm:block" />
+              <button
+                type="button"
+                onClick={() => setAuthOpen(true)}
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Login
+              </button>
+              <Button className="rounded-full px-5" onClick={() => setAuthOpen(true)}>
+                Sign up
+              </Button>
+            </>
           )}
         </div>
       </div>

@@ -31,4 +31,9 @@ EXPOSE 4000
 # `prisma db push` creates the schema directly from schema.prisma (no migration
 # history needed at this stage). Switch to `prisma migrate deploy` once you commit
 # migrations under packages/db/prisma/migrations.
-CMD ["sh", "-c", "(cd packages/db && bunx prisma db push --skip-generate) ; cd apps/backend && bun start"]
+#
+# Run from apps/backend so Prisma (and `bun start`'s dotenv) load config the same
+# way: when the config is provided as a mounted `.env` file (k8s secret volume at
+# /app/apps/backend/.env) Prisma reads DATABASE_URL from it; when it's provided as
+# real process env vars (docker-compose) Prisma uses those. Either path works.
+CMD ["sh", "-c", "cd apps/backend && bunx prisma db push --schema=../../packages/db/prisma/schema.prisma --skip-generate ; bun start"]

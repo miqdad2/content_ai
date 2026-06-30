@@ -2,49 +2,39 @@
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
-  --background: oklch(0.985 0.014 282.7);
-  --foreground: oklch(0.18 0.03 276);
-  --card: oklch(1 0 0 / 86%);
-  --card-foreground: oklch(0.18 0.03 276);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.03 276);
-  --primary: oklch(0.54 0.23 286);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.94 0.025 286);
-  --secondary-foreground: oklch(0.28 0.08 286);
-  --muted: oklch(0.95 0.018 286);
-  --muted-foreground: oklch(0.48 0.04 276);
-  --accent: oklch(0.93 0.035 255);
-  --accent-foreground: oklch(0.26 0.08 255);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.88 0.03 286);
-  --input: oklch(0.88 0.03 286);
-  --ring: oklch(0.64 0.19 286);
-  --radius: 0.9rem;
-}
-
+/*
+ * Video Arena — Higgsfield-style theme.
+ * Pure-black canvas, dark neutral surfaces, a signature electric-lime primary
+ * CTA and a hot-pink secondary accent for "trending"/discount badges. No light
+ * theme.
+ */
+:root,
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: oklch(0.04 0 0);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.09 0 0);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.08 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
+  /* Electric-lime CTA buttons on black — the Higgsfield signature. */
+  --primary: oklch(0.92 0.21 124);
+  --primary-foreground: oklch(0.18 0.02 124);
+  --secondary: oklch(0.18 0 0);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --muted: oklch(0.16 0 0);
+  --muted-foreground: oklch(0.64 0 0);
+  --accent: oklch(0.2 0 0);
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --destructive: oklch(0.62 0.21 18);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.92 0.21 124);
+  --radius: 0.75rem;
+
+  /* Brand accents: electric lime + hot pink. */
+  --brand: oklch(0.92 0.21 124);
+  --brand-2: oklch(0.66 0.24 357);
 }
 
 @theme inline {
@@ -67,6 +57,8 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-brand: var(--brand);
+  --color-brand-2: var(--brand-2);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -77,25 +69,32 @@
   * {
     border-color: var(--color-border);
   }
+  html {
+    color-scheme: dark;
+  }
+  /* Interactive elements should feel clickable (browsers default buttons to the
+   * arrow cursor). Disabled controls fall back to not-allowed. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  label[for],
+  summary,
+  select:not(:disabled) {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
   body {
     min-height: 100vh;
-    background:
-      radial-gradient(
-        circle at top left,
-        oklch(0.78 0.18 286 / 18%),
-        transparent 32rem
-      ),
-      radial-gradient(
-        circle at top right,
-        oklch(0.75 0.13 220 / 16%),
-        transparent 30rem
-      ),
-      linear-gradient(
-        180deg,
-        oklch(0.99 0.01 286),
-        var(--color-background) 34rem
-      );
+    background-color: var(--color-background);
+    /* Flat black canvas with a single faint lime glow at the top (Higgsfield). */
+    background-image: radial-gradient(
+      ellipse 70rem 30rem at 50% -10rem,
+      oklch(0.92 0.21 124 / 7%),
+      transparent 70%
+    );
     background-attachment: fixed;
+    background-repeat: no-repeat;
     color: var(--color-foreground);
     font-family:
       ui-sans-serif,
@@ -106,14 +105,54 @@
       Helvetica,
       Arial,
       sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
   }
   ::selection {
-    background-color: oklch(0.78 0.18 286 / 30%);
+    background-color: oklch(0.92 0.21 124 / 35%);
+    color: oklch(0.99 0 0);
+  }
+
+  /* Sleek, unobtrusive dark scrollbars. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: oklch(1 0 0 / 14%) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: oklch(1 0 0 / 12%);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: oklch(1 0 0 / 22%);
   }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Subtle white→muted gradient text for hero headlines. */
+  .text-gradient {
+    background: linear-gradient(
+      180deg,
+      oklch(0.99 0 0),
+      oklch(0.72 0.01 286)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 }

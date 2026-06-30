@@ -26,8 +26,6 @@ export function TemplateSetupForm({ onCreated }: Props) {
   const [description, setDescription] = useState("");
   const [avatar1, setAvatar1] = useState("");
   const [avatar2, setAvatar2] = useState(NONE);
-  const [durationSec, setDurationSec] = useState("60");
-  const [audio, setAudio] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,8 +60,6 @@ export function TemplateSetupForm({ onCreated }: Props) {
       form.set("name", name);
       if (description) form.set("description", description);
       avatarIds.forEach((id) => form.append("avatarIds", id));
-      if (durationSec) form.set("durationSec", durationSec);
-      if (audio) form.set("audio", audio);
       const template = await createTemplate(form);
       onCreated(template);
     } catch (err) {
@@ -75,13 +71,13 @@ export function TemplateSetupForm({ onCreated }: Props) {
 
   if (avatars.length === 0) {
     return (
-      <div className="max-w-xl rounded-lg border bg-card p-6">
-        <h2 className="text-lg font-medium">New template</h2>
+      <div className="rounded-2xl border border-white/[0.08] bg-card/40 p-6">
+        <h2 className="text-lg font-semibold">New template</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           You need at least one avatar before creating a template. Avatars define who
           appears in the generated video.
         </p>
-        <Button asChild className="mt-4 w-fit">
+        <Button asChild className="mt-4 w-fit rounded-xl">
           <Link to="/user/avatar">Create an avatar</Link>
         </Button>
       </div>
@@ -89,8 +85,18 @@ export function TemplateSetupForm({ onCreated }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid max-w-xl gap-4 rounded-lg border bg-card p-6">
-      <h2 className="text-lg font-medium">New template</h2>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      {/* Header card */}
+      <div className="relative h-28 overflow-hidden rounded-xl border border-white/10">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-card to-card" />
+        <div className="relative flex h-full flex-col justify-end p-3">
+          <span className="text-xs font-extrabold uppercase tracking-wide text-primary">
+            Template
+          </span>
+          <span className="text-sm font-medium text-foreground">New template</span>
+        </div>
+      </div>
+
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="tpl-name">Name</Label>
         <Input id="tpl-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Product launch hype reel" />
@@ -138,23 +144,12 @@ export function TemplateSetupForm({ onCreated }: Props) {
         generate from the published template.
       </p>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="tpl-duration">Timeline length (s)</Label>
-        <Input
-          id="tpl-duration"
-          type="number"
-          min={1}
-          value={durationSec}
-          onChange={(e) => setDurationSec(e.target.value)}
-        />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="tpl-audio">Base audio track (optional)</Label>
-        <Input id="tpl-audio" type="file" accept="audio/*" onChange={(e) => setAudio(e.target.files?.[0] ?? null)} />
-        <p className="text-xs text-muted-foreground">{audio ? audio.name : "MP3 / WAV / M4A"}</p>
-      </div>
+      <p className="text-xs text-muted-foreground">
+        You&apos;ll start with an empty timeline — add video clips and upload audio in the editor.
+        The timeline length grows automatically to fit your clips.
+      </p>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={submitting} className="w-fit">
+      <Button type="submit" size="lg" disabled={submitting} className="w-full rounded-xl">
         {submitting ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" /> Creating…

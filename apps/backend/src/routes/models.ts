@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { requireAuth } from "../middleware/requireAuth.js";
-import { listImageModels, listVideoModels } from "../lib/openrouter.js";
+import { listImageModels, listSwapModels, listVideoModels } from "../lib/openrouter.js";
 
 export const modelsRouter: Router = Router();
 
@@ -21,3 +21,5 @@ modelsRouter.get("/", requireAuth, modelsHandler(listVideoModels));
 modelsRouter.get("/video", requireAuth, modelsHandler(listVideoModels));
 // `/api/models/image` → image-generation models.
 modelsRouter.get("/image", requireAuth, modelsHandler(listImageModels));
+// `/api/models/swap` → selectable face-swap models (local FaceFusion + edit models).
+modelsRouter.get("/swap", requireAuth, modelsHandler(listSwapModels));

@@ -33,10 +33,17 @@ export function MyImages({ images, loading, error }: Props) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {images.map((image) => (
-        <Card key={image.id} className="overflow-hidden">
-          <div className="aspect-square bg-muted">
+        <Card
+          key={image.id}
+          className="group overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-white/15 hover:shadow-xl hover:shadow-black/40"
+        >
+          <div className="aspect-square overflow-hidden bg-black/40">
             {image.imageUrl ? (
-              <img src={image.imageUrl} alt={image.prompt} className="h-full w-full object-cover" />
+              <img
+                src={image.imageUrl}
+                alt={image.prompt}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
             ) : (
               <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                 {image.status === "FAILED" ? "Generation failed" : "Processing…"}

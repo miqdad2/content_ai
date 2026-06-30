@@ -25,8 +25,22 @@ const publicReadPolicy = JSON.stringify({
   ],
 });
 
-/** Base URL objects are publicly served from. */
-const PUBLIC_BASE = `${env.MINIO_USE_SSL ? "https" : "http"}://${env.MINIO_FRONTEND_ENDPOINT}:${env.MINIO_PORT}/${BUCKET}`;
+/**
+ * Base URL objects are publicly served from. The port is omitted when it's the
+ * protocol default (443 for https, 80 for http) so that pointing the MinIO_*
+ * envs at a hosted S3 endpoint (e.g. DigitalOcean Spaces:
+ * `MINIO_FRONTEND_ENDPOINT=blr1.digitaloceanspaces.com`, `MINIO_USE_SSL=true`,
+ * `MINIO_PORT=443`) yields clean URLs like
+ * `https://blr1.digitaloceanspaces.com/<bucket>/<key>`.
+ */
+const PROTOCOL = env.MINIO_USE_SSL ? "https" : "http";
+const IS_DEFAULT_PORT =
+  (env.MINIO_USE_SSL && env.MINIO_PORT === 443) ||
+  (!env.MINIO_USE_SSL && env.MINIO_PORT === 80);
+const HOST = IS_DEFAULT_PORT
+  ? env.MINIO_FRONTEND_ENDPOINT
+  : `${env.MINIO_FRONTEND_ENDPOINT}:${env.MINIO_PORT}`;
+const PUBLIC_BASE = `${PROTOCOL}://${HOST}/${BUCKET}`;
 
 /** Ensure the bucket exists and allows anonymous reads. Safe to call repeatedly. */
 export async function ensureBucket(): Promise<void> {
