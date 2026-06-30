@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { Router, type Request, type Response } from "express";
 import { z } from "zod";
 import { prisma } from "@repo/db";
@@ -80,7 +81,9 @@ creditsRouter.post("/checkout", requireAuth, async (req: AuthedRequest, res) => 
     const order = await createOrder({
       amount: pack.amountPaise,
       currency: "INR",
-      receipt: `credits_${req.userId}_${Date.now()}`,
+      // Razorpay caps receipt at 40 chars, so a userId+timestamp overflows. Use a
+      // short unique token (37 chars); the userId/pack live in `notes` below.
+      receipt: `rcpt_${randomUUID().replace(/-/g, "")}`,
       notes: { userId: req.userId!, packId: pack.id, credits: String(credits) },
     });
 
