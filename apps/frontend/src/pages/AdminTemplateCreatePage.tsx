@@ -447,7 +447,10 @@ export function AdminTemplateCreatePage() {
     }
   }
 
-  if (isPending || meLoading) return null;
+  // Only blank on the *initial* load (before we know the user). Never unmount
+  // once `me` is known, or a background /me refresh (e.g. on window focus after
+  // a file dialog closes) would tear the editor down mid-interaction.
+  if ((isPending || meLoading) && !me) return null;
   if (!session?.user) return <SignedOut />;
   if (!me?.isAdmin) {
     return (
