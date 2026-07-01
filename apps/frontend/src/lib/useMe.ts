@@ -42,17 +42,16 @@ export function useMe(): { me: Me | null; loading: boolean; refresh: () => void 
     load();
   }, [load]);
 
-  // Refresh when credits change (e.g. after a purchase or generation) or the
-  // tab regains focus, so the navbar balance stays up to date — but as a
-  // background refresh that never flips `loading`.
+  // Refresh only when credits explicitly change (e.g. after a purchase or
+  // generation), as a background refresh that never flips `loading`. We do NOT
+  // refetch on window focus — that caused a re-render (and scroll-to-top) every
+  // time the tab regained focus.
   useEffect(() => {
     if (!session?.user) return;
     const onRefresh = () => load(true);
     window.addEventListener(CREDITS_REFRESH_EVENT, onRefresh);
-    window.addEventListener("focus", onRefresh);
     return () => {
       window.removeEventListener(CREDITS_REFRESH_EVENT, onRefresh);
-      window.removeEventListener("focus", onRefresh);
     };
   }, [session?.user, load]);
 
