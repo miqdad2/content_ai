@@ -40,6 +40,18 @@ const envSchema = z.object({
         .filter(Boolean),
     ),
 
+  // Comma-separated list of superadmin emails. Superadmins are admins who can
+  // additionally see and manage EVERY admin's templates (not just their own).
+  SUPERADMIN_EMAILS: z
+    .string()
+    .default("")
+    .transform((v) =>
+      v
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean),
+    ),
+
   // OpenRouter
   OPENROUTER_API_KEY: z.string().optional(),
   OPENROUTER_BASE_URL: z.string().url().default("https://openrouter.ai/api/v1"),

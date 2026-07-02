@@ -103,11 +103,19 @@ async function resolveBlockFace(
   return avatar?.faceKey ? downloadObject(avatar.faceKey) : null;
 }
 
-/** Ensure the template exists and is owned by the requesting admin. */
+/**
+ * Scope a single-template lookup by id. A superadmin can address any template;
+ * a regular admin is restricted to templates they created.
+ */
+function templateScope(req: AuthedRequest) {
+  return req.isSuperAdmin
+    ? { id: req.params.id }
+    : { id: req.params.id, creatorId: req.userId };
+}
+
+/** Ensure the template exists and the requester may act on it (owner or superadmin). */
 async function ownedTemplate(req: AuthedRequest, res: Response) {
-  const template = await prisma.template.findFirst({
-    where: { id: req.params.id, creatorId: req.userId },
-  });
+  const template = await prisma.template.findFirst({ where: templateScope(req) });
   if (!template) {
     res.status(404).json({ error: "Not found" });
     return null;
@@ -117,10 +125,11 @@ async function ownedTemplate(req: AuthedRequest, res: Response) {
 
 // ---- Templates ----
 
-// List the admin's own templates (with block counts).
+// List templates: a superadmin sees every admin's templates; a regular admin
+// sees only their own (with block counts).
 adminTemplatesRouter.get("/", requireAdmin, async (req: AuthedRequest, res) => {
   const templates = await prisma.template.findMany({
-    where: { creatorId: req.userId },
+    where: req.isSuperAdmin ? {} : { creatorId: req.userId },
     orderBy: { updatedAt: "desc" },
     include: { blocks: true },
   });
@@ -130,7 +139,7 @@ adminTemplatesRouter.get("/", requireAdmin, async (req: AuthedRequest, res) => {
 // Full template with ordered blocks + audio clips.
 adminTemplatesRouter.get("/:id", requireAdmin, async (req: AuthedRequest, res) => {
   const template = await prisma.template.findFirst({
-    where: { id: req.params.id, creatorId: req.userId },
+    where: templateScope(req),
     include: {
       blocks: { orderBy: { startSec: "asc" } },
       audioClips: { orderBy: { startSec: "asc" } },
@@ -197,7 +206,9 @@ adminTemplatesRouter.patch(
     const avatarIds = parsed.data.avatarIds;
     if (avatarIds) {
       try {
-        await assertOwnedAvatars(avatarIds, req.userId!);
+        // Avatars are validated against the template's creator (so a superadmin
+        // editing another admin's template assigns that admin's avatars).
+        await assertOwnedAvatars(avatarIds, template.creatorId);
       } catch (err) {
         res.status(400).json({ error: err instanceof Error ? err.message : "Invalid avatars" });
         return;
@@ -542,9 +553,7 @@ adminTemplatesRouter.post(
   "/:id/blocks/:blockId/bake",
   requireAdmin,
   async (req: AuthedRequest, res) => {
-    const template = await prisma.template.findFirst({
-      where: { id: req.params.id, creatorId: req.userId },
-    });
+    const template = await prisma.template.findFirst({ where: templateScope(req) });
     if (!template) {
       res.status(404).json({ error: "Not found" });
       return;
@@ -561,8 +570,9 @@ adminTemplatesRouter.post(
       return;
     }
 
-    // Resolve the avatar face for this block's slot (if assigned).
-    const face = await resolveBlockFace(template.avatarIds, block.avatarSlot, req.userId!);
+    // Resolve the avatar face for this block's slot (avatars belong to the
+    // template's creator, so resolve against that user, not the requester).
+    const face = await resolveBlockFace(template.avatarIds, block.avatarSlot, template.creatorId);
 
     // Lip-sync: build the audio under this block from the template's audio clips.
     let lipsyncAudioUrl: string | undefined;
@@ -602,9 +612,7 @@ adminTemplatesRouter.post(
   "/:id/blocks/:blockId/swap",
   requireAdmin,
   async (req: AuthedRequest, res) => {
-    const template = await prisma.template.findFirst({
-      where: { id: req.params.id, creatorId: req.userId },
-    });
+    const template = await prisma.template.findFirst({ where: templateScope(req) });
     if (!template) {
       res.status(404).json({ error: "Not found" });
       return;
@@ -626,7 +634,7 @@ adminTemplatesRouter.post(
       return;
     }
 
-    const face = await resolveBlockFace(template.avatarIds, block.avatarSlot, req.userId!);
+    const face = await resolveBlockFace(template.avatarIds, block.avatarSlot, template.creatorId);
     if (!face) {
       res.status(400).json({ error: "This block's avatar slot has no avatar assigned." });
       return;
@@ -887,7 +895,7 @@ adminTemplatesRouter.delete(
 
 adminTemplatesRouter.post("/:id/export", requireAdmin, async (req: AuthedRequest, res) => {
   const template = await prisma.template.findFirst({
-    where: { id: req.params.id, creatorId: req.userId },
+    where: templateScope(req),
     include: {
       blocks: { orderBy: { startSec: "asc" } },
       audioClips: { orderBy: { startSec: "asc" } },
@@ -906,8 +914,10 @@ adminTemplatesRouter.post("/:id/export", requireAdmin, async (req: AuthedRequest
     return;
   }
 
+  // The template's avatars belong to its creator (a superadmin may be exporting
+  // another admin's template), so resolve + attribute the render to that user.
   const avatars = await prisma.avatar.findMany({
-    where: { id: { in: template.avatarIds }, userId: req.userId },
+    where: { id: { in: template.avatarIds }, userId: template.creatorId },
   });
   if (avatars.length !== template.avatarIds.length) {
     res.status(400).json({ error: "One or more of the template's avatars were not found." });
@@ -919,7 +929,7 @@ adminTemplatesRouter.post("/:id/export", requireAdmin, async (req: AuthedRequest
   const render = await prisma.templateRender.create({
     data: {
       templateId: template.id,
-      userId: req.userId!,
+      userId: template.creatorId,
       avatarIds: template.avatarIds,
       avatars: { connect: template.avatarIds.map((id) => ({ id })) },
       status: "IN_PROGRESS",

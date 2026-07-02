@@ -5,6 +5,8 @@ import { auth } from "../auth.js";
 export interface AuthedRequest extends Request {
   userId?: string;
   userEmail?: string;
+  // Set by requireAdmin: true when the user's email is in SUPERADMIN_EMAILS.
+  isSuperAdmin?: boolean;
 }
 
 /** Express middleware that rejects unauthenticated requests. */
