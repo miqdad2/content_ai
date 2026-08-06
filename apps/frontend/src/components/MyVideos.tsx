@@ -43,7 +43,7 @@ function VideoCard({ video, onOpen }: { video: Video; onOpen: () => void }) {
   return (
     <button
       onClick={onOpen}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-card text-left transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-black/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="glass-medium group flex flex-col overflow-hidden rounded-2xl text-left transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-black/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary motion-safe:hover:-translate-y-1"
     >
       <div className="relative aspect-video overflow-hidden bg-black/40">
         {done ? (
@@ -135,7 +135,7 @@ function VideoModal({ video, onClose }: { video: Video | null; onClose: () => vo
               <p className="text-sm text-muted-foreground">{video.prompt}</p>
 
               {video.status === "FAILED" && video.error && (
-                <details className="rounded-lg border border-white/10 bg-white/[0.02] p-3 text-xs text-muted-foreground">
+                <details className="glass-strong rounded-lg p-3 text-xs text-muted-foreground">
                   <summary className="cursor-pointer select-none font-medium text-foreground">
                     Technical details
                   </summary>

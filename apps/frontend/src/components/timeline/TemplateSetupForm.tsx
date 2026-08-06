@@ -71,7 +71,7 @@ export function TemplateSetupForm({ onCreated }: Props) {
 
   if (avatars.length === 0) {
     return (
-      <div className="rounded-2xl border border-white/[0.08] bg-card/40 p-6">
+      <div className="glass-medium rounded-2xl p-6">
         <h2 className="text-lg font-semibold">New template</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           You need at least one avatar before creating a template. Avatars define who
@@ -87,7 +87,7 @@ export function TemplateSetupForm({ onCreated }: Props) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       {/* Header card */}
-      <div className="relative h-28 overflow-hidden rounded-xl border border-white/10">
+      <div className="glass-light relative h-28 overflow-hidden rounded-xl">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-card to-card" />
         <div className="relative flex h-full flex-col justify-end p-3">
           <span className="text-xs font-extrabold uppercase tracking-wide text-primary">

@@ -490,7 +490,7 @@ export function AdminTemplateCreatePage() {
           </aside>
 
           {/* Continue editing */}
-          <main className="min-h-[60vh] flex-1 overflow-hidden rounded-2xl border border-white/[0.08] bg-card/40 p-6">
+          <main className="glass-medium min-h-[60vh] flex-1 overflow-hidden rounded-2xl p-6">
             <h2 className="mb-4 text-lg font-semibold">Continue editing</h2>
             {openError && <p className="mb-3 text-sm text-destructive">{openError}</p>}
             {templates.length === 0 ? (
@@ -503,7 +503,7 @@ export function AdminTemplateCreatePage() {
                   <button
                     key={t.id}
                     onClick={() => openTemplate(t.id)}
-                    className="group flex flex-col overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02] text-left transition-colors hover:border-primary/40 hover:bg-white/[0.05]"
+                    className="glass-medium group flex flex-col overflow-hidden rounded-xl text-left transition-colors hover:border-primary/40 hover:bg-white/[0.05]"
                   >
                     <div className="relative aspect-video w-full overflow-hidden bg-black/40">
                       {t.previewVideoUrl ? (
@@ -549,7 +549,7 @@ export function AdminTemplateCreatePage() {
   // Editor view.
   return (
     <div className="mx-auto max-w-[1600px] px-4 py-6 lg:px-6">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => setCurrent(null)} title="Back">
             <ArrowLeft className="h-4 w-4" />
@@ -651,7 +651,7 @@ export function AdminTemplateCreatePage() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
         {/* Export panel */}
-        <div className="rounded-2xl border border-white/[0.08] bg-card/40 p-5">
+        <div className="glass-medium rounded-2xl p-5">
           <h2 className="mb-1 flex items-center gap-2 text-lg font-medium">
             <Rocket className="h-4 w-4" /> Test &amp; export
           </h2>
@@ -712,7 +712,7 @@ export function AdminTemplateCreatePage() {
         </div>
 
         {/* Inspector */}
-        <div className="rounded-2xl border border-white/[0.08] bg-card/40 p-5">
+        <div className="glass-medium rounded-2xl p-5">
           {selected ? (
             <BlockInspector
               templateId={current.id}
@@ -753,7 +753,7 @@ export function AdminTemplateCreatePage() {
             }}
           />
           <div
-            className="fixed z-50 min-w-36 overflow-hidden rounded-md border bg-popover p-1 text-sm shadow-md"
+            className="glass-strong fixed z-50 min-w-36 overflow-hidden rounded-md p-1 text-sm shadow-md"
             style={{ left: menu.x, top: menu.y }}
           >
             <button

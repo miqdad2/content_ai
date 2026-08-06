@@ -56,7 +56,7 @@ export function AvatarPage() {
           </div>
         </aside>
 
-        <main className="min-h-[60vh] flex-1 overflow-hidden rounded-2xl border border-white/[0.08] bg-card/40 p-6">
+        <main className="glass-medium min-h-[60vh] flex-1 overflow-hidden rounded-2xl p-6">
           <h2 className="mb-4 text-lg font-semibold">My avatars</h2>
           <MyAvatars avatars={avatars} loading={loading} error={error} onDelete={handleDelete} />
         </main>

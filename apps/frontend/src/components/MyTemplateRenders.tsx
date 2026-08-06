@@ -32,7 +32,7 @@ export function MyTemplateRenders({ renders, loading, error }: Props) {
       {renders.map((render) => (
         <Card
           key={render.id}
-          className="group overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-white/15 hover:shadow-xl hover:shadow-black/40"
+          className="group overflow-hidden transition-all duration-300 hover:border-white/15 hover:shadow-xl hover:shadow-black/40 motion-safe:hover:-translate-y-1"
         >
           <Link to={`/generation/${render.id}`} className="block aspect-video bg-black/40">
             {render.thumbnailUrl ? (

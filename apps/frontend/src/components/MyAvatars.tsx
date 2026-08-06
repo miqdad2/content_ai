@@ -32,7 +32,7 @@ export function MyAvatars({ avatars, loading, error, onDelete }: Props) {
       {avatars.map((avatar) => (
         <Card
           key={avatar.id}
-          className="group overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-white/15 hover:shadow-xl hover:shadow-black/40"
+          className="group overflow-hidden transition-all duration-300 hover:border-white/15 hover:shadow-xl hover:shadow-black/40 motion-safe:hover:-translate-y-1"
         >
           <div className="aspect-square overflow-hidden bg-black/40">
             {avatar.faceUrl ? (

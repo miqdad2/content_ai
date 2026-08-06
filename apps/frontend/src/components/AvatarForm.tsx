@@ -45,7 +45,7 @@ export function AvatarForm({ onCreated }: Props) {
   return (
     <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3">
       {/* Header card */}
-      <div className="relative h-28 overflow-hidden rounded-xl border border-white/10">
+      <div className="glass-light relative h-28 overflow-hidden rounded-xl">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-card to-card" />
         <div className="relative flex h-full flex-col justify-end p-3">
           <span className="text-xs font-extrabold uppercase tracking-wide text-primary">
@@ -80,7 +80,7 @@ export function AvatarForm({ onCreated }: Props) {
       </div>
 
       {/* Photos */}
-      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+      <div className="glass-strong rounded-xl p-3">
         <div className="mb-2 text-xs font-medium text-muted-foreground">
           Photos <span className="text-muted-foreground/60">(1st = face source)</span>
         </div>

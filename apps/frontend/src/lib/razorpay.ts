@@ -1,4 +1,5 @@
 /** Razorpay Checkout helper: lazily loads the script and opens the widget. */
+import { DEMO_PAYMENTS_DISABLED_MESSAGE, isDemoMode } from "@/lib/demoMode";
 
 const CHECKOUT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
 
@@ -52,8 +53,20 @@ export function loadRazorpay(): Promise<void> {
   return loadPromise;
 }
 
-/** Open the Razorpay Checkout widget for the given options. */
+/**
+ * Open the Razorpay Checkout widget for the given options.
+ *
+ * Demo mode never loads the real script, never constructs a widget, never
+ * invokes `handler` (so no fake payment id is ever produced), and never
+ * reaches payment verification or credit-granting — it refuses outright.
+ * `BillingPage.tsx`'s `startCheckout()` call already fails before this
+ * function is ever reached (see demoMode.ts), so in practice this is a
+ * second, independent guarantee rather than the primary gate.
+ */
 export async function openRazorpayCheckout(options: RazorpayCheckoutOptions): Promise<void> {
+  if (isDemoMode()) {
+    throw new Error(DEMO_PAYMENTS_DISABLED_MESSAGE);
+  }
   await loadRazorpay();
   if (!window.Razorpay) throw new Error("Razorpay is unavailable.");
   const rzp = new window.Razorpay(options);

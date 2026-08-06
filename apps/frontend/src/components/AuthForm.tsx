@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Gift, Mail, Sparkles } from "lucide-react";
+import { Gift, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signIn, signUp } from "@/lib/auth-client";
+import { DEMO_EMAIL, DEMO_PASSWORD, isDemoMode } from "@/lib/demoMode";
+import { Logo } from "./Logo";
 
 type Mode = "signin" | "signup";
 
@@ -35,9 +37,9 @@ function GoogleIcon() {
 }
 
 /**
- * Higgsfield-style auth column: a lime "extra discount" CTA on top of social +
- * email sign-in. Used both inside the AuthModal (with a showcase panel beside
- * it) and on the standalone /login page.
+ * Auth column: a primary "extra discount" CTA on top of social + email
+ * sign-in. Used both inside the AuthModal (with a showcase panel beside it)
+ * and on the standalone /login page.
  */
 export function AuthForm({ onSuccess, callbackURL }: AuthFormProps) {
   const [mode, setMode] = useState<Mode>("signup");
@@ -81,16 +83,34 @@ export function AuthForm({ onSuccess, callbackURL }: AuthFormProps) {
     <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex flex-col items-center gap-3 text-center">
-        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-          <Sparkles className="h-5 w-5" />
-        </span>
+        <Logo showWordmark={false} size="lg" />
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Welcome to Pixovid</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Welcome to content.ai</h2>
           <p className="mt-1 text-sm text-muted-foreground">Sign up and generate for free</p>
         </div>
       </div>
 
-      {/* Lime "extra discount" CTA */}
+      {isDemoMode() && (
+        <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 text-center text-xs text-muted-foreground">
+          Demo account: <span className="font-medium text-foreground">{DEMO_EMAIL}</span> /{" "}
+          <span className="font-medium text-foreground">{DEMO_PASSWORD}</span>
+          <button
+            type="button"
+            onClick={() => {
+              setMode("signin");
+              setShowEmail(true);
+              setEmail(DEMO_EMAIL);
+              setPassword(DEMO_PASSWORD);
+              setError(null);
+            }}
+            className="ml-2 font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Fill in
+          </button>
+        </div>
+      )}
+
+      {/* Primary-colored "extra discount" CTA */}
       <button
         type="button"
         onClick={() => {

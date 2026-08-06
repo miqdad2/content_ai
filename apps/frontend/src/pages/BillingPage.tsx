@@ -11,6 +11,7 @@ import {
   type CreditTransaction,
 } from "@/lib/api";
 import { openRazorpayCheckout } from "@/lib/razorpay";
+import { getDemoPlan, isDemoMode } from "@/lib/demoMode";
 import { refreshCredits } from "@/lib/useMe";
 import { PageHeader } from "@/components/PageHeader";
 import { SignedOut } from "@/components/SignedOut";
@@ -62,7 +63,7 @@ export function BillingPage() {
           key: order.razorpayKeyId,
           amount: order.amount,
           currency: order.currency,
-          name: "Pixovid",
+          name: "content.ai",
           description: `${order.packName} — ${order.credits} credits`,
           order_id: order.orderId,
           prefill: { email: session?.user?.email, name: session?.user?.name ?? undefined },
@@ -99,15 +100,22 @@ export function BillingPage() {
         title="Top up your credits."
         description="Buy credits and spend them on video, image and template-render generations. Credits are refunded automatically if a generation fails."
       >
-        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur">
-          <Coins className="h-6 w-6 text-brand" />
-          <div>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">Balance</p>
-            <p className="text-2xl font-semibold">
-              {credits ? credits.balance.toLocaleString() : "—"}
-              <span className="ml-1 text-sm font-normal text-muted-foreground">credits</span>
-            </p>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur">
+            <Coins className="h-6 w-6 text-brand" />
+            <div>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Balance</p>
+              <p className="text-2xl font-semibold">
+                {credits ? credits.balance.toLocaleString() : "—"}
+                <span className="ml-1 text-sm font-normal text-muted-foreground">credits</span>
+              </p>
+            </div>
           </div>
+          {getDemoPlan() && (
+            <span className="text-xs text-muted-foreground">
+              {getDemoPlan()} <span className="text-muted-foreground/70">— Demo plan</span>
+            </span>
+          )}
         </div>
       </PageHeader>
 
@@ -124,8 +132,14 @@ export function BillingPage() {
 
       {packs && !packs.razorpayConfigured && (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-          Payments are not configured on this server. Set <code>RAZORPAY_KEY_ID</code> and{" "}
-          <code>RAZORPAY_KEY_SECRET</code> in the backend environment to enable purchases.
+          {isDemoMode() ? (
+            "Payments are disabled in the demo environment."
+          ) : (
+            <>
+              Payments are not configured on this server. Set <code>RAZORPAY_KEY_ID</code> and{" "}
+              <code>RAZORPAY_KEY_SECRET</code> in the backend environment to enable purchases.
+            </>
+          )}
         </div>
       )}
 
@@ -139,7 +153,7 @@ export function BillingPage() {
           ].map((row) => (
             <div
               key={row.label}
-              className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-sm"
+              className="glass-light flex items-center justify-between rounded-xl px-4 py-3 text-sm"
             >
               <span className="text-muted-foreground">{row.label}</span>
               <span className="font-medium">{row.cost} credits</span>
@@ -153,13 +167,16 @@ export function BillingPage() {
         {packs?.packs.map((pack, i) => (
           <Card
             key={pack.id}
-            className={i === 1 ? "border-brand/40 ring-1 ring-brand/30" : undefined}
+            // Card's own .glass-medium class sets border-color, so a border-* override
+            // here would silently lose the cascade — ring uses box-shadow instead, so
+            // it doesn't collide and is what actually renders the highlight.
+            className={i === 1 ? "ring-2 ring-brand-magenta/40" : undefined}
           >
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">{pack.name}</CardTitle>
                 {i === 1 && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-brand/20 px-2.5 py-0.5 text-[0.7rem] font-semibold text-brand">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-magenta/20 px-2.5 py-0.5 text-[0.7rem] font-semibold text-brand-magenta">
                     <Sparkles className="h-3 w-3" /> Popular
                   </span>
                 )}

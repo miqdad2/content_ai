@@ -68,7 +68,11 @@ function BlockTile({ block, index }: { block: RenderBlockProgress; index: number
   return (
     <div
       className={cn(
-        "flex w-44 shrink-0 flex-col gap-2 rounded-xl border bg-card/60 p-3 transition-colors",
+        // Background/blur give the tile a medium-glass feel; the border color is
+        // left to cfg.accent below since it's the functional per-phase signal —
+        // combining it with the .glass-* utility's own border would fight for
+        // the same CSS property, so we apply bg/blur directly instead.
+        "flex w-44 shrink-0 flex-col gap-2 rounded-xl border bg-glass-bg p-3 backdrop-blur-xl transition-colors",
         cfg.accent,
         active && "ring-1 ring-inset ring-white/10",
       )}
@@ -190,7 +194,7 @@ export function GenerationPage() {
           controls
           autoPlay
           poster={render.thumbnailUrl ?? undefined}
-          className="w-full rounded-2xl border border-white/[0.08] bg-black"
+          className="w-full rounded-2xl border border-glass-border bg-black"
         />
         <div className="mt-4 flex justify-center">
           <Button asChild size="lg" className="rounded-full px-6">
@@ -232,7 +236,7 @@ export function GenerationPage() {
         <div className="space-y-8">
           {/* Overall progress — only while generating or after a failure. */}
           {!completed && (
-            <div className="rounded-2xl border border-white/[0.08] bg-card/50 p-5">
+            <div className="glass-medium rounded-2xl p-5">
               <div className="mb-3 flex items-center justify-between gap-3 text-sm">
                 <span className="font-medium">
                   {failed

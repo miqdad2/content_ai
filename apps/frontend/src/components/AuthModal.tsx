@@ -30,7 +30,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
               playsInline
               preload="metadata"
             />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/90 via-background/15 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-6">
               <span className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-0.5 text-xs font-extrabold text-primary-foreground">
                 4K Resolution
@@ -39,7 +39,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                 Kling 3.0 &amp; Seedance 2.0
               </h3>
               <p className="mt-1 text-sm text-white/80">
-                The best video models, for the best price — only on Pixovid.
+                The best generative models, for the best price — only on content.ai.
               </p>
             </div>
           </div>

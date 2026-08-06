@@ -139,7 +139,7 @@ export function TemplateRenderDialog({ template, open, onOpenChange, onRendered 
             </div>
 
             {avatars.length === 0 ? (
-              <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-muted-foreground">
+              <div className="rounded-xl border border-glass-border bg-white/[0.02] p-4 text-sm text-muted-foreground">
                 You don&apos;t have any avatars yet.
                 <Button asChild variant="link" className="h-auto px-1 py-0 text-primary">
                   <Link to="/user/avatar">Create one first.</Link>

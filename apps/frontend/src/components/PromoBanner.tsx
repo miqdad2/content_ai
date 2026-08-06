@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 const STORAGE_KEY = "va_promo_dismissed";
 
 /**
- * Full-width electric-lime promo bar pinned above the navbar (Higgsfield-style).
+ * Full-width primary-colored promo bar pinned above the navbar.
  * Dismissible; the choice is remembered in localStorage.
  */
 export function PromoBanner() {

@@ -15,7 +15,7 @@ function TemplateCard({ template, onSelect }: { template: Template; onSelect: ()
   return (
     <button
       onClick={onSelect}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-card text-left transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-black/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="glass-medium group relative flex flex-col overflow-hidden rounded-2xl text-left transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-black/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary motion-safe:hover:-translate-y-1"
     >
       <div className="relative aspect-video overflow-hidden bg-black/40">
         {template.previewVideoUrl ? (

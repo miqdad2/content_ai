@@ -1,12 +1,12 @@
 import { LegalPage, LegalSection } from "@/components/LegalPage";
 
-const CONTACT_EMAIL = "harkirat.iitr@gmail.com";
+const CONTACT_EMAIL = "hello@content.ai";
 
 export function PrivacyPage() {
   return (
     <LegalPage title="Privacy Policy" updated="June 30, 2026">
       <p className="text-sm leading-7 text-muted-foreground">
-        Pixovid (&ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;) is committed to
+        content.ai (&ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;) is committed to
         protecting your privacy. This Privacy Policy explains what information we collect, how we
         use it, and the choices you have. By using our website and services you agree to the
         practices described below.

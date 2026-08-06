@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth-client";
 
 /**
- * Higgsfield-style landing page.
+ * content.ai landing page.
  *
  * A featured carousel of cinematic AI clips sits above a dense, autoplaying
- * masonry wall. Every clip is real Pixovid output generated on OpenRouter
- * and stored in apps/frontend/public/showcase (regenerate via
+ * masonry wall. Every clip is real output generated on OpenRouter and stored
+ * in apps/frontend/public/showcase (regenerate via
  * `bun run --cwd apps/backend scripts/generate-showcase.ts`).
  */
 type Aspect = "portrait" | "landscape" | "square" | "tall";
@@ -21,7 +21,7 @@ interface ShowcaseClip {
   title: string;
   /** The prompt that generated the clip (shown as a caption / on hover). */
   prompt: string;
-  /** Model label shown as a lime badge, e.g. "kling-v3.0". */
+  /** Model label shown as a primary-colored badge, e.g. "kling-v3.0". */
   model: string;
   category: Category;
   aspect: Aspect;
@@ -190,20 +190,20 @@ function Clip({ src, className }: { src: string; className?: string }) {
   );
 }
 
-/** A large featured card with a title/caption below it (Higgsfield hero row). */
+/** A large featured card with a title/caption below it. */
 function FeaturedCard({ clip }: { clip: ShowcaseClip }) {
   return (
     <div className="group w-[300px] shrink-0 snap-start sm:w-[440px] lg:w-[520px]">
-      <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-card">
+      <div className="glass-light relative overflow-hidden rounded-2xl">
         <Clip
           src={clip.src}
-          className="aspect-video h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+          className="aspect-video h-full w-full object-cover transition-transform duration-700 motion-safe:group-hover:scale-[1.03]"
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
         <span className="absolute bottom-3 right-3 rounded-md bg-primary px-2 py-0.5 text-xs font-extrabold tracking-tight text-primary-foreground">
           4K
         </span>
-        <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/50 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
+        <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-background/50 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
           {clip.model}
         </span>
       </div>
@@ -217,15 +217,15 @@ function FeaturedCard({ clip }: { clip: ShowcaseClip }) {
 
 function MasonryTile({ clip }: { clip: ShowcaseClip }) {
   return (
-    <div className="group relative mb-4 break-inside-avoid overflow-hidden rounded-2xl border border-white/[0.08] bg-card shadow-lg shadow-black/30">
+    <div className="glass-light group relative mb-4 break-inside-avoid overflow-hidden rounded-2xl shadow-lg shadow-black/30">
       <div className={`relative w-full ${ASPECT_CLASS[clip.aspect]}`}>
         <Clip
           src={clip.src}
-          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          className="h-full w-full object-cover transition-transform duration-700 motion-safe:group-hover:scale-105"
         />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background/70 via-background/20 to-transparent" />
 
-        <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/50 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
+        <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-background/50 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
           {clip.model}
         </span>
         <span className="absolute right-3 top-3 rounded-full bg-primary px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-primary-foreground">
@@ -250,45 +250,54 @@ interface Banner {
   kicker: string;
   subtitle: string;
   src: string;
+  /** Poster shown while the video loads and as a fallback if it fails to play. */
+  poster: string;
 }
 
-/** Big featured template banners (Higgsfield "SEEDANCE 2.0" hero style). */
-const TEMPLATE_BANNERS: Banner[] = [
-  {
-    title: "DIDI",
-    kicker: "DHURANDHAR · TEMPLATE",
-    subtitle: "Put yourself in the scene",
-    src: "/showcase/templates/dhurandhar.mp4",
-  },
-  {
-    title: "BOYFRIEND",
-    kicker: "KARAN AUJLA · TEMPLATE",
-    subtitle: "Star in the music video",
-    src: "/showcase/templates/boyfriend.mp4",
-  },
-];
+/**
+ * Big featured template banners. Empty pending approved Kuwait/GCC motion
+ * assets — the two previous entries referenced third-party movie/celebrity
+ * footage (a real film title and a real recording artist's name) and were
+ * removed rather than relabeled. Drop new { title, kicker, subtitle, src,
+ * poster } objects in here to bring this section back; no other code needs
+ * to change — the section below renders nothing while this stays empty.
+ */
+const TEMPLATE_BANNERS: Banner[] = [];
 
 function TemplateBanner({ banner, cta }: { banner: Banner; cta: React.ReactNode }) {
+  const [failed, setFailed] = useState(false);
+  const label = `${banner.title} — ${banner.subtitle}`;
   return (
-    <div className="group relative overflow-hidden rounded-3xl border border-white/10 shadow-2xl shadow-black/40">
-      <video
-        className="aspect-[16/11] w-full object-cover transition-transform duration-700 group-hover:scale-105 sm:aspect-[16/6]"
-        src={banner.src}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-      />
+    <div className="glass-light group relative overflow-hidden rounded-3xl shadow-2xl shadow-black/40">
+      {failed ? (
+        <img
+          src={banner.poster}
+          alt={label}
+          className="aspect-[16/11] w-full object-cover sm:aspect-[16/6]"
+        />
+      ) : (
+        <video
+          className="aspect-[16/11] w-full object-cover transition-transform duration-700 motion-safe:group-hover:scale-105 sm:aspect-[16/6]"
+          src={banner.src}
+          poster={banner.poster}
+          aria-label={label}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          onError={() => setFailed(true)}
+        />
+      )}
       {/* Localized scrim only in the bottom-left corner — keeps most of the video bright. */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-black/80 via-black/15 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-background/80 via-background/15 to-transparent" />
 
       <span className="absolute right-4 top-4 -skew-x-6 rounded bg-primary px-2.5 py-0.5 text-base font-extrabold tracking-tight text-primary-foreground sm:right-6 sm:top-6 sm:text-xl">
         4K
       </span>
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex max-w-2xl flex-col items-start p-5 text-left sm:p-8">
-        <span className="rounded-full bg-black/55 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white backdrop-blur sm:text-xs">
+        <span className="rounded-full bg-background/55 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white backdrop-blur sm:text-xs">
           {banner.kicker}
         </span>
         <h3 className="mt-2 text-3xl font-extrabold uppercase tracking-tight text-primary drop-shadow-[0_2px_18px_rgba(0,0,0,0.8)] sm:text-5xl">
@@ -336,16 +345,17 @@ export function LandingPage() {
     <div className="overflow-hidden">
       {/* Compact hero */}
       <section className="mx-auto max-w-[1600px] px-4 pt-12 pb-8 lg:px-6">
-        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-sm text-muted-foreground">
+        <div className="glass-light mb-5 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm text-muted-foreground">
           <Sparkles className="h-4 w-4 text-primary" />
-          Real clips, real prompts — generated in Pixovid
+          Real clips, real prompts — generated with content.ai
         </div>
         <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-          The arena where <span className="text-primary">AI video</span> comes to life.
+          Where <span className="text-primary">AI content</span> comes to life for Kuwait &amp; the GCC.
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
-          Browse a living wall of cinematic clips, then jump in and generate your own with
-          model controls, references and audio — all in one focused workspace.
+          Browse a living wall of cinematic clips, then jump in and generate your own video,
+          images and face swaps with model controls, references and audio — all in one
+          focused workspace built for GCC creators, freelancers, agencies and enterprises.
         </p>
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
           {startCreating}
@@ -358,17 +368,23 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Dhurandhar template banner */}
-      <section className="mx-auto max-w-[1600px] px-4 pb-12 lg:px-6">
-        <h2 className="mb-4 text-lg font-semibold">Featured template</h2>
-        <TemplateBanner banner={TEMPLATE_BANNERS[0]!} cta={tryTemplate} />
-      </section>
+      {/* Template banners — see TEMPLATE_BANNERS comment; renders nothing while empty. */}
+      {TEMPLATE_BANNERS.length > 0 && (
+        <section className="mx-auto max-w-[1600px] px-4 pb-12 lg:px-6">
+          <h2 className="mb-4 text-lg font-semibold">Featured template</h2>
+          <div className="flex flex-col gap-8">
+            {TEMPLATE_BANNERS.map((banner) => (
+              <TemplateBanner key={banner.title} banner={banner} cta={tryTemplate} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Featured carousel */}
       <section className="mx-auto max-w-[1600px] px-4 pb-12 lg:px-6">
         <div className="mb-4 flex items-baseline justify-between">
           <h2 className="text-lg font-semibold">Featured</h2>
-          <span className="text-sm text-muted-foreground">Made with Seedance 2.0 &amp; Kling 3.0</span>
+          <span className="text-sm text-muted-foreground">Built for Kuwait and the GCC</span>
         </div>
         <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 lg:-mx-6 lg:px-6">
           {FEATURED.map((clip) => (
@@ -387,18 +403,15 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Karan Aujla template banner */}
-      <section className="mx-auto max-w-[1600px] px-4 pb-12 lg:px-6">
-        <TemplateBanner banner={TEMPLATE_BANNERS[1]!} cta={tryTemplate} />
-      </section>
-
       {/* Closing CTA */}
       <section className="mx-auto max-w-[1600px] px-4 pb-24 lg:px-6">
-        <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-white/[0.08] bg-card p-10 text-center">
-          <h2 className="text-2xl font-semibold sm:text-3xl">Your next clip is one prompt away.</h2>
+        <div className="glass-light flex flex-col items-center justify-center gap-4 rounded-3xl p-10 text-center">
+          <h2 className="text-2xl font-semibold sm:text-3xl">
+            Your next piece of <span className="text-gradient-warm">content</span> is one prompt away.
+          </h2>
           <p className="max-w-xl text-muted-foreground">
-            Pick a model, describe the shot, and render production-ready video, images and
-            template renders in minutes.
+            Pick a model, describe the shot, and render production-ready video, images, face
+            swaps and templates in minutes.
           </p>
           {startCreating}
         </div>

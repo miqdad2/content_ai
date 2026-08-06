@@ -1,3 +1,46 @@
+import {
+  isDemoMode,
+  demoFetchModels,
+  demoFetchImageModels,
+  demoFetchSwapModels,
+  demoFetchVideos,
+  demoCreateVideo,
+  demoFetchImages,
+  demoCreateImage,
+  demoFetchFaceSwaps,
+  demoCreateFaceSwap,
+  demoFetchMe,
+  demoFetchAvatars,
+  demoCreateAvatar,
+  demoDeleteAvatar,
+  demoFetchTemplates,
+  demoFetchTemplate,
+  demoRenderTemplate,
+  demoFetchTemplateRenders,
+  demoFetchRender,
+  demoRetryRender,
+  demoFetchAdminTemplates,
+  demoFetchAdminTemplate,
+  demoCreateTemplate,
+  demoUpdateTemplate,
+  demoDeleteTemplate,
+  demoCreateBlock,
+  demoUpdateBlock,
+  demoDeleteBlock,
+  demoCopyBlock,
+  demoBakeBlock,
+  demoGenerateBlockSwap,
+  demoCaptureBlockFrame,
+  demoExportTemplate,
+  demoFetchCredits,
+  demoFetchCreditPacks,
+  demoStartCheckout,
+  demoVerifyPayment,
+  demoCreateAudioClip,
+  demoUpdateAudioClip,
+  demoDeleteAudioClip,
+} from "@/lib/demoMode";
+
 export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
 /** Shared lifecycle status across videos, images, and face swaps. */
@@ -281,8 +324,9 @@ const del = (path: string) =>
   fetch(`${API_URL}${path}`, { method: "DELETE", credentials: "include" }).then(handle<void>);
 
 // ---- Models ----
-export const fetchModels = () => get<VideoModel[]>("/api/models/video");
-export const fetchImageModels = () => get<GenerationModel[]>("/api/models/image");
+export const fetchModels = async () => (isDemoMode() ? demoFetchModels() : get<VideoModel[]>("/api/models/video"));
+export const fetchImageModels = async () =>
+  isDemoMode() ? demoFetchImageModels() : get<GenerationModel[]>("/api/models/image");
 
 /** A selectable face-swap engine: local FaceFusion or an OpenRouter edit model. */
 export interface SwapModelOption {
@@ -290,84 +334,126 @@ export interface SwapModelOption {
   name: string;
   local: boolean;
 }
-export const fetchSwapModels = () => get<SwapModelOption[]>("/api/models/swap");
+export const fetchSwapModels = async () =>
+  isDemoMode() ? demoFetchSwapModels() : get<SwapModelOption[]>("/api/models/swap");
 
 // ---- Videos ----
-export const fetchVideos = () => get<Video[]>("/api/videos");
-export const createVideo = (form: FormData) => post<Video>("/api/videos", form);
+export const fetchVideos = async () => (isDemoMode() ? demoFetchVideos() : get<Video[]>("/api/videos"));
+export const createVideo = async (form: FormData) =>
+  isDemoMode() ? demoCreateVideo(form) : post<Video>("/api/videos", form);
 
 // ---- Images ----
-export const fetchImages = () => get<Image[]>("/api/images");
-export const createImage = (form: FormData) => post<Image>("/api/images", form);
+export const fetchImages = async () => (isDemoMode() ? demoFetchImages() : get<Image[]>("/api/images"));
+export const createImage = async (form: FormData) =>
+  isDemoMode() ? demoCreateImage(form) : post<Image>("/api/images", form);
 
 // ---- Face swaps ----
-export const fetchFaceSwaps = () => get<FaceSwap[]>("/api/faceswaps");
-export const createFaceSwap = (form: FormData) => post<FaceSwap>("/api/faceswaps", form);
+export const fetchFaceSwaps = async () =>
+  isDemoMode() ? demoFetchFaceSwaps() : get<FaceSwap[]>("/api/faceswaps");
+export const createFaceSwap = async (form: FormData) =>
+  isDemoMode() ? demoCreateFaceSwap(form) : post<FaceSwap>("/api/faceswaps", form);
 
 // ---- Me ----
-export const fetchMe = () => get<Me>("/api/me");
+export const fetchMe = async () => (isDemoMode() ? demoFetchMe() : get<Me>("/api/me"));
 
 // ---- Avatars ----
-export const fetchAvatars = () => get<Avatar[]>("/api/avatars");
-export const createAvatar = (form: FormData) => post<Avatar>("/api/avatars", form);
-export const deleteAvatar = (id: string) => del(`/api/avatars/${id}`);
+export const fetchAvatars = async () => (isDemoMode() ? demoFetchAvatars() : get<Avatar[]>("/api/avatars"));
+export const createAvatar = async (form: FormData) =>
+  isDemoMode() ? demoCreateAvatar(form) : post<Avatar>("/api/avatars", form);
+export const deleteAvatar = async (id: string) =>
+  isDemoMode() ? demoDeleteAvatar(id) : del(`/api/avatars/${id}`);
 
 // ---- Templates (users) ----
-export const fetchTemplates = () => get<Template[]>("/api/templates");
-export const fetchTemplate = (id: string) => get<Template>(`/api/templates/${id}`);
-export const renderTemplate = (id: string, avatarIds: string[]) =>
-  postJson<TemplateRender>(`/api/templates/${id}/render`, { avatarIds });
-export const fetchTemplateRenders = () => get<TemplateRender[]>("/api/template-renders");
-export const fetchRender = (id: string) => get<TemplateRender>(`/api/template-renders/${id}`);
+export const fetchTemplates = async () =>
+  isDemoMode() ? demoFetchTemplates() : get<Template[]>("/api/templates");
+export const fetchTemplate = async (id: string) =>
+  isDemoMode() ? demoFetchTemplate(id) : get<Template>(`/api/templates/${id}`);
+export const renderTemplate = async (id: string, avatarIds: string[]) =>
+  isDemoMode()
+    ? demoRenderTemplate(id, avatarIds)
+    : postJson<TemplateRender>(`/api/templates/${id}/render`, { avatarIds });
+export const fetchTemplateRenders = async () =>
+  isDemoMode() ? demoFetchTemplateRenders() : get<TemplateRender[]>("/api/template-renders");
+export const fetchRender = async (id: string) =>
+  isDemoMode() ? demoFetchRender(id) : get<TemplateRender>(`/api/template-renders/${id}`);
 /** Retry a failed render in place — keeps completed blocks, re-runs the rest. */
-export const retryRender = (id: string) =>
-  postJson<TemplateRender>(`/api/template-renders/${id}/retry`, {});
+export const retryRender = async (id: string) =>
+  isDemoMode() ? demoRetryRender(id) : postJson<TemplateRender>(`/api/template-renders/${id}/retry`, {});
 
 // ---- Templates (admin) ----
-export const fetchAdminTemplates = () => get<Template[]>("/api/admin/templates");
-export const fetchAdminTemplate = (id: string) => get<Template>(`/api/admin/templates/${id}`);
-export const createTemplate = (form: FormData) => post<Template>("/api/admin/templates", form);
-export const updateTemplate = (id: string, form: FormData) =>
-  patch<Template>(`/api/admin/templates/${id}`, form);
-export const deleteTemplate = (id: string) => del(`/api/admin/templates/${id}`);
-export const createBlock = (templateId: string, form: FormData) =>
-  post<TemplateBlock>(`/api/admin/templates/${templateId}/blocks`, form);
-export const updateBlock = (templateId: string, blockId: string, form: FormData) =>
-  patch<TemplateBlock>(`/api/admin/templates/${templateId}/blocks/${blockId}`, form);
-export const deleteBlock = (templateId: string, blockId: string) =>
-  del(`/api/admin/templates/${templateId}/blocks/${blockId}`);
-export const copyBlock = (templateId: string, blockId: string, startSec: number, track: number) =>
-  postJson<{ block: TemplateBlock; source: TemplateBlock }>(
-    `/api/admin/templates/${templateId}/blocks/${blockId}/copy`,
-    { startSec, track },
-  );
-export const bakeBlock = (templateId: string, blockId: string) =>
-  postJson<TemplateBlock>(`/api/admin/templates/${templateId}/blocks/${blockId}/bake`, {});
-export const generateBlockSwap = (templateId: string, blockId: string) =>
-  postJson<TemplateBlock>(`/api/admin/templates/${templateId}/blocks/${blockId}/swap`, {});
-export const captureBlockFrame = (
+export const fetchAdminTemplates = async () =>
+  isDemoMode() ? demoFetchAdminTemplates() : get<Template[]>("/api/admin/templates");
+export const fetchAdminTemplate = async (id: string) =>
+  isDemoMode() ? demoFetchAdminTemplate(id) : get<Template>(`/api/admin/templates/${id}`);
+export const createTemplate = async (form: FormData) =>
+  isDemoMode() ? demoCreateTemplate(form) : post<Template>("/api/admin/templates", form);
+export const updateTemplate = async (id: string, form: FormData) =>
+  isDemoMode() ? demoUpdateTemplate(id, form) : patch<Template>(`/api/admin/templates/${id}`, form);
+export const deleteTemplate = async (id: string) =>
+  isDemoMode() ? demoDeleteTemplate(id) : del(`/api/admin/templates/${id}`);
+export const createBlock = async (templateId: string, form: FormData) =>
+  isDemoMode()
+    ? demoCreateBlock(templateId, form)
+    : post<TemplateBlock>(`/api/admin/templates/${templateId}/blocks`, form);
+export const updateBlock = async (templateId: string, blockId: string, form: FormData) =>
+  isDemoMode()
+    ? demoUpdateBlock(templateId, blockId, form)
+    : patch<TemplateBlock>(`/api/admin/templates/${templateId}/blocks/${blockId}`, form);
+export const deleteBlock = async (templateId: string, blockId: string) =>
+  isDemoMode()
+    ? demoDeleteBlock(templateId, blockId)
+    : del(`/api/admin/templates/${templateId}/blocks/${blockId}`);
+export const copyBlock = async (templateId: string, blockId: string, startSec: number, track: number) =>
+  isDemoMode()
+    ? demoCopyBlock(templateId, blockId, startSec, track)
+    : postJson<{ block: TemplateBlock; source: TemplateBlock }>(
+        `/api/admin/templates/${templateId}/blocks/${blockId}/copy`,
+        { startSec, track },
+      );
+export const bakeBlock = async (templateId: string, blockId: string) =>
+  isDemoMode()
+    ? demoBakeBlock(templateId, blockId)
+    : postJson<TemplateBlock>(`/api/admin/templates/${templateId}/blocks/${blockId}/bake`, {});
+export const generateBlockSwap = async (templateId: string, blockId: string) =>
+  isDemoMode()
+    ? demoGenerateBlockSwap(templateId, blockId)
+    : postJson<TemplateBlock>(`/api/admin/templates/${templateId}/blocks/${blockId}/swap`, {});
+export const captureBlockFrame = async (
   templateId: string,
   blockId: string,
   body: { sourceBlockId: string; atSec: number; slot: "start" | "end" },
-) => postJson<TemplateBlock>(`/api/admin/templates/${templateId}/blocks/${blockId}/frame`, body);
-export const exportTemplate = (id: string) =>
-  postJson<Template>(`/api/admin/templates/${id}/export`, {});
+) =>
+  isDemoMode()
+    ? demoCaptureBlockFrame(templateId, blockId, body)
+    : postJson<TemplateBlock>(`/api/admin/templates/${templateId}/blocks/${blockId}/frame`, body);
+export const exportTemplate = async (id: string) =>
+  isDemoMode() ? demoExportTemplate(id) : postJson<Template>(`/api/admin/templates/${id}/export`, {});
 
 // ---- Credits & billing ----
-export const fetchCredits = () => get<CreditBalance>("/api/credits");
-export const fetchCreditPacks = () => get<CreditPacksResponse>("/api/credits/packs");
-export const startCheckout = (packId: string) =>
-  postJson<CheckoutOrder>("/api/credits/checkout", { packId });
-export const verifyPayment = (body: {
+export const fetchCredits = async () => (isDemoMode() ? demoFetchCredits() : get<CreditBalance>("/api/credits"));
+export const fetchCreditPacks = async () =>
+  isDemoMode() ? demoFetchCreditPacks() : get<CreditPacksResponse>("/api/credits/packs");
+export const startCheckout = async (packId: string) =>
+  isDemoMode() ? demoStartCheckout(packId) : postJson<CheckoutOrder>("/api/credits/checkout", { packId });
+export const verifyPayment = async (body: {
   razorpay_order_id: string;
   razorpay_payment_id: string;
   razorpay_signature: string;
-}) => postJson<{ balance: number }>("/api/credits/verify", body);
+}) =>
+  isDemoMode()
+    ? demoVerifyPayment(body.razorpay_order_id)
+    : postJson<{ balance: number }>("/api/credits/verify", body);
 
 // ---- Template audio clips (admin) ----
-export const createAudioClip = (templateId: string, form: FormData) =>
-  post<TemplateAudioClip>(`/api/admin/templates/${templateId}/audio`, form);
-export const updateAudioClip = (templateId: string, clipId: string, form: FormData) =>
-  patch<TemplateAudioClip>(`/api/admin/templates/${templateId}/audio/${clipId}`, form);
-export const deleteAudioClip = (templateId: string, clipId: string) =>
-  del(`/api/admin/templates/${templateId}/audio/${clipId}`);
+export const createAudioClip = async (templateId: string, form: FormData) =>
+  isDemoMode()
+    ? demoCreateAudioClip(templateId, form)
+    : post<TemplateAudioClip>(`/api/admin/templates/${templateId}/audio`, form);
+export const updateAudioClip = async (templateId: string, clipId: string, form: FormData) =>
+  isDemoMode()
+    ? demoUpdateAudioClip(templateId, clipId, form)
+    : patch<TemplateAudioClip>(`/api/admin/templates/${templateId}/audio/${clipId}`, form);
+export const deleteAudioClip = async (templateId: string, clipId: string) =>
+  isDemoMode()
+    ? demoDeleteAudioClip(templateId, clipId)
+    : del(`/api/admin/templates/${templateId}/audio/${clipId}`);

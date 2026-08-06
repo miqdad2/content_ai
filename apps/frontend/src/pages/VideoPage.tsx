@@ -24,7 +24,7 @@ function Step({
 }) {
   return (
     <div>
-      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02]">
+      <div className="glass-medium relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl">
         <span className="absolute left-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
           {badge}
         </span>
@@ -73,7 +73,7 @@ function IntroPanel() {
             {["seedance-2.0", "kling-v3.0", "seedance-2.0-fast", "more…"].map((m) => (
               <span
                 key={m}
-                className="rounded-lg border border-white/10 bg-white/[0.03] px-2 py-3 text-center text-xs font-medium text-muted-foreground"
+                className="glass-light rounded-lg px-2 py-3 text-center text-xs font-medium text-muted-foreground"
               >
                 {m}
               </span>
@@ -145,7 +145,7 @@ export function VideoPage() {
               loadVideos();
             }}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-sm font-medium transition-colors",
+              "glass-light inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
               view === "library" ? "bg-white/[0.08] text-foreground" : "text-muted-foreground hover:bg-white/[0.06]",
             )}
           >
@@ -155,7 +155,7 @@ export function VideoPage() {
           <button
             onClick={() => setView("intro")}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-sm font-medium transition-colors",
+              "glass-light inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
               view === "intro" ? "bg-white/[0.08] text-foreground" : "text-muted-foreground hover:bg-white/[0.06]",
             )}
           >
@@ -180,7 +180,7 @@ export function VideoPage() {
         </aside>
 
         {/* Main panel */}
-        <main className="min-h-[60vh] flex-1 overflow-hidden rounded-2xl border border-white/[0.08] bg-card/40">
+        <main className="glass-medium min-h-[60vh] flex-1 overflow-hidden rounded-2xl">
           {view === "library" ? (
             <div className="p-6">
               <MyVideos videos={videos} loading={loading} error={error} />

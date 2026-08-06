@@ -1,18 +1,18 @@
 import { LegalPage, LegalSection } from "@/components/LegalPage";
 
-const CONTACT_EMAIL = "harkirat.iitr@gmail.com";
+const CONTACT_EMAIL = "hello@content.ai";
 
 export function TermsPage() {
   return (
     <LegalPage title="Terms of Service" updated="June 30, 2026">
       <p className="text-sm leading-7 text-muted-foreground">
-        These Terms of Service (&ldquo;Terms&rdquo;) govern your access to and use of Pixovid.
+        These Terms of Service (&ldquo;Terms&rdquo;) govern your access to and use of content.ai.
         By creating an account or using the service, you agree to these Terms.
       </p>
 
       <LegalSection heading="Eligibility & accounts">
         <p>
-          You must be at least 18 years old to use Pixovid. You are responsible for keeping your
+          You must be at least 18 years old to use content.ai. You are responsible for keeping your
           account credentials secure and for all activity under your account.
         </p>
       </LegalSection>
@@ -50,7 +50,7 @@ export function TermsPage() {
       <LegalSection heading="Disclaimer & liability">
         <p>
           The service is provided &ldquo;as is&rdquo; without warranties of any kind. To the maximum
-          extent permitted by law, Pixovid is not liable for any indirect or consequential
+          extent permitted by law, content.ai is not liable for any indirect or consequential
           damages arising from your use of the service.
         </p>
       </LegalSection>
