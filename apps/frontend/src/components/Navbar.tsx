@@ -43,10 +43,10 @@ function NavItem({
       to={to}
       onClick={onClick}
       className={cn(
-        "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+        "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors duration-(--duration-control) ease-(--ease-standard)",
         block ? "min-h-11 w-full" : "shrink-0",
         active
-          ? "bg-primary/15 text-primary"
+          ? "bg-primary/15 text-primary shadow-[inset_0_0_0_1px_rgba(199,168,255,0.28)]"
           : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
       )}
     >
@@ -167,21 +167,23 @@ export function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/75 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-4 px-4 lg:gap-6 lg:px-6">
-        <Link to="/" className="flex shrink-0 items-center" onClick={closeMobile}>
+    <header className="sticky top-3 z-40 px-3 sm:px-4 lg:px-6">
+      <div className="glass-ambient glass-edge relative mx-auto flex h-14 max-w-[1600px] items-center gap-4 overflow-hidden rounded-full px-4 lg:gap-6 lg:px-6">
+        <Link to="/" className="relative z-10 flex shrink-0 items-center" onClick={closeMobile}>
           <Logo />
         </Link>
-        <DemoBadge />
+        <span className="relative z-10">
+          <DemoBadge />
+        </span>
 
         {/* Desktop nav */}
-        <nav className="hidden min-w-0 flex-1 items-center gap-1 lg:flex">
+        <nav className="relative z-10 hidden min-w-0 flex-1 items-center gap-1 lg:flex">
           {links.map(({ to, label, badge }) => (
             <NavItem key={to} to={to} label={label} badge={badge} active={location.pathname === to} />
           ))}
         </nav>
 
-        <div className="ml-auto hidden shrink-0 items-center gap-3 lg:flex">
+        <div className="relative z-10 ml-auto hidden shrink-0 items-center gap-3 lg:flex">
           <AuthCluster />
         </div>
 
@@ -191,16 +193,16 @@ export function Navbar() {
           onClick={() => setMobileOpen((v) => !v)}
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileOpen}
-          className="ml-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
+          className="relative z-10 ml-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
-      {/* Mobile panel */}
+      {/* Mobile panel — floating elevated sheet just below the bar */}
       {mobileOpen && (
-        <div className="border-t border-border bg-background/95 backdrop-blur-xl lg:hidden">
-          <nav className="flex flex-col gap-1 px-4 py-3">
+        <div className="glass-elevated glass-edge relative mx-auto mt-2 max-w-[1600px] overflow-hidden rounded-3xl lg:hidden">
+          <nav className="relative z-10 flex flex-col gap-1 p-3">
             {links.map(({ to, label, badge }) => (
               <NavItem
                 key={to}
@@ -213,7 +215,7 @@ export function Navbar() {
               />
             ))}
           </nav>
-          <div className="border-t border-border px-4 py-3">
+          <div className="relative z-10 border-t border-glass-border-elevated p-3">
             <AuthCluster stacked />
           </div>
         </div>

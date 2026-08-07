@@ -18,7 +18,18 @@ const LEGAL_LINKS = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-background">
+    <footer className="relative border-t border-border bg-background">
+      {/* Faint top-edge wash so the footer reads as a continuation of the
+          page's atmosphere rather than a sudden flat-dark stop. Subtle by
+          design — a footer, unlike the hero, should stay in the dark
+          register. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-32"
+        style={{
+          background: "linear-gradient(180deg, oklch(0.62 0.21 293 / 7%), transparent)",
+        }}
+      />
       <div className="mx-auto grid max-w-[1600px] gap-10 px-4 py-12 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:px-6">
         {/* Brand */}
         <div>

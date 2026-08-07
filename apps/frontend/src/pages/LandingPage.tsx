@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Play, Sparkles } from "lucide-react";
 import { AuthModal } from "@/components/AuthModal";
+import { GlassWorkspacePreview } from "@/components/GlassWorkspacePreview";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth-client";
 
@@ -194,16 +195,16 @@ function Clip({ src, className }: { src: string; className?: string }) {
 function FeaturedCard({ clip }: { clip: ShowcaseClip }) {
   return (
     <div className="group w-[300px] shrink-0 snap-start sm:w-[440px] lg:w-[520px]">
-      <div className="glass-light relative overflow-hidden rounded-2xl">
+      <div className="glass-light relative overflow-hidden rounded-3xl shadow-lg shadow-black/15 transition-all duration-(--duration-surface) ease-(--ease-standard) motion-safe:group-hover:-translate-y-1.5 motion-safe:group-hover:border-glass-border-elevated motion-safe:group-hover:shadow-xl">
         <Clip
           src={clip.src}
-          className="aspect-video h-full w-full object-cover transition-transform duration-700 motion-safe:group-hover:scale-[1.03]"
+          className="aspect-video h-full w-full object-cover transition-transform duration-700 motion-safe:group-hover:scale-[1.015]"
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
         <span className="absolute bottom-3 right-3 rounded-md bg-primary px-2 py-0.5 text-xs font-extrabold tracking-tight text-primary-foreground">
           4K
         </span>
-        <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-background/50 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
+        <span className="glass-light absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-medium text-white">
           {clip.model}
         </span>
       </div>
@@ -217,15 +218,15 @@ function FeaturedCard({ clip }: { clip: ShowcaseClip }) {
 
 function MasonryTile({ clip }: { clip: ShowcaseClip }) {
   return (
-    <div className="glass-light group relative mb-4 break-inside-avoid overflow-hidden rounded-2xl shadow-lg shadow-black/30">
+    <div className="glass-light group relative mb-6 break-inside-avoid overflow-hidden rounded-3xl shadow-lg shadow-black/20 transition-all duration-(--duration-surface) ease-(--ease-standard) motion-safe:hover:-translate-y-1 motion-safe:hover:border-glass-border-elevated motion-safe:hover:shadow-xl">
       <div className={`relative w-full ${ASPECT_CLASS[clip.aspect]}`}>
         <Clip
           src={clip.src}
-          className="h-full w-full object-cover transition-transform duration-700 motion-safe:group-hover:scale-105"
+          className="h-full w-full object-cover transition-transform duration-700 motion-safe:group-hover:scale-[1.02]"
         />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background/70 via-background/20 to-transparent" />
 
-        <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-background/50 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
+        <span className="glass-light absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-medium text-white">
           {clip.model}
         </span>
         <span className="absolute right-3 top-3 rounded-full bg-primary px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-primary-foreground">
@@ -342,29 +343,53 @@ export function LandingPage() {
   );
 
   return (
-    <div className="overflow-hidden">
-      {/* Compact hero */}
-      <section className="mx-auto max-w-[1600px] px-4 pt-12 pb-8 lg:px-6">
-        <div className="glass-light mb-5 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm text-muted-foreground">
-          <Sparkles className="h-4 w-4 text-primary" />
-          Real clips, real prompts — generated with content.ai
-        </div>
-        <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-          Where <span className="text-primary">AI content</span> comes to life for Kuwait &amp; the GCC.
-        </h1>
-        <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
-          Browse a living wall of cinematic clips, then jump in and generate your own video,
-          images and face swaps with model controls, references and audio — all in one
-          focused workspace built for GCC creators, freelancers, agencies and enterprises.
-        </p>
-        <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-          {startCreating}
-          <Button asChild variant="outline" size="lg" className="rounded-full px-6">
-            <Link to={signedIn ? "/user/templates" : "/video"}>
-              Explore the studio
-              <Play className="h-4 w-4" />
-            </Link>
-          </Button>
+    <div className="relative overflow-hidden">
+      {/* Shared atmospheric stage behind hero → Featured, so the page reads
+          as one continuous lit environment instead of dropping into a flat
+          gallery right after the hero. Plain gradients only (no
+          backdrop-filter), so this adds zero new blur surfaces; capped
+          height keeps it out of the darker lower page. Lighter on small
+          screens per the brief's "reduce decorative lighting density"
+          mobile guidance. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-375 opacity-70 md:opacity-100"
+        style={{
+          background:
+            "radial-gradient(64rem 44rem at 58% -4rem, oklch(0.78 0.13 320 / 20%), transparent 72%), radial-gradient(50rem 38rem at 6% 22rem, oklch(0.62 0.21 293 / 14%), transparent 68%)",
+        }}
+      />
+      {/* Immersive hero: copy + CTA on the left, floating glass workspace on
+          the right (stacks beneath on mobile — see GlassWorkspacePreview). */}
+      <section className="mx-auto max-w-[1600px] px-4 pt-10 pb-10 lg:px-6 lg:pb-16">
+        <div className="grid items-center gap-8 lg:grid-cols-[2fr_3fr] lg:gap-10 xl:gap-14">
+          <div>
+            <div className="glass-light mb-5 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm text-muted-foreground">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Real clips, real prompts — generated with content.ai
+            </div>
+            <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+              Where <span className="text-primary">AI content</span> comes to life for Kuwait &amp; the GCC.
+            </h1>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
+              Browse a living wall of cinematic clips, then jump in and generate your own video,
+              images and face swaps with model controls, references and audio — all in one
+              focused workspace built for GCC creators, freelancers, agencies and enterprises.
+            </p>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              {startCreating}
+              <Button asChild variant="outline" size="lg" className="rounded-full px-6">
+                <Link to={signedIn ? "/user/templates" : "/video"}>
+                  Explore the studio
+                  <Play className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-4 lg:mt-0">
+            <GlassWorkspacePreview signedIn={signedIn} onSignInRequired={() => setAuthOpen(true)} />
+          </div>
         </div>
       </section>
 
@@ -380,32 +405,59 @@ export function LandingPage() {
         </section>
       )}
 
-      {/* Featured carousel */}
-      <section className="mx-auto max-w-[1600px] px-4 pb-12 lg:px-6">
-        <div className="mb-4 flex items-baseline justify-between">
-          <h2 className="text-lg font-semibold">Featured</h2>
-          <span className="text-sm text-muted-foreground">Built for Kuwait and the GCC</span>
-        </div>
-        <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 lg:-mx-6 lg:px-6">
-          {FEATURED.map((clip) => (
-            <FeaturedCard key={clip.title} clip={clip} />
-          ))}
+      {/* Featured carousel — wrapped in one large, very transparent glass
+          stage so the cards read as floating INSIDE a glass surface rather
+          than sitting on dark background next to separate glass cards (the
+          reference's core hierarchy: light field → glass surface → cards →
+          controls). One shared backdrop-filter surface, not stacked per card. */}
+      <section className="mx-auto max-w-[1600px] px-4 pb-16 lg:px-6 lg:pb-20">
+        <div className="glass-ambient glass-edge relative overflow-hidden rounded-[2.5rem] py-8 sm:py-10">
+          <div className="relative z-10 mb-4 flex items-baseline justify-between px-4 sm:px-6 lg:px-8">
+            <h2 className="text-lg font-semibold">Featured</h2>
+            <span className="text-sm text-muted-foreground">Built for Kuwait and the GCC</span>
+          </div>
+          <div className="relative z-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:px-6 lg:px-8">
+            {FEATURED.map((clip) => (
+              <FeaturedCard key={clip.title} clip={clip} />
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Masonry wall */}
-      <section className="mx-auto max-w-[1600px] px-4 pb-12 lg:px-6">
+      {/* Masonry wall — a lighter, top-weighted atmospheric wash (not full
+          section height, this is a very tall gallery) reaching over the left
+          column and center region per the brief, so several rows read as lit
+          without pulling the whole wall out of the darker lower-page
+          register. Plain gradient, no backdrop-filter. */}
+      <section className="relative mx-auto max-w-[1600px] px-4 pb-20 lg:px-6">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-300 opacity-60 md:opacity-100"
+          style={{
+            background:
+              "radial-gradient(48rem 34rem at 16% 6%, oklch(0.62 0.21 293 / 11%), transparent 68%), radial-gradient(52rem 36rem at 52% 22%, oklch(0.78 0.13 320 / 10%), transparent 70%), radial-gradient(44rem 30rem at 88% 40%, oklch(0.76 0.12 205 / 6%), transparent 64%)",
+          }}
+        />
         <h2 className="mb-4 text-lg font-semibold">Explore the wall</h2>
-        <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 xl:columns-4">
+        <div className="columns-1 gap-6 sm:columns-2 lg:columns-3 xl:columns-4">
           {SHOWCASE.map((clip) => (
             <MasonryTile key={clip.title} clip={clip} />
           ))}
         </div>
       </section>
 
-      {/* Closing CTA */}
-      <section className="mx-auto max-w-[1600px] px-4 pb-24 lg:px-6">
-        <div className="glass-light flex flex-col items-center justify-center gap-4 rounded-3xl p-10 text-center">
+      {/* Closing CTA — its own soft wash so the page doesn't drop straight
+          from the gallery into a flat-dark panel before the footer. */}
+      <section className="relative mx-auto max-w-[1600px] px-4 pb-24 lg:px-6">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 -top-20 -z-10 h-96 opacity-70 md:opacity-100"
+          style={{
+            background:
+              "radial-gradient(50rem 34rem at 50% 30%, oklch(0.78 0.13 320 / 14%), transparent 72%)",
+          }}
+        />
+        <div className="glass-ambient glass-edge relative overflow-hidden flex flex-col items-center justify-center gap-4 rounded-3xl p-10 text-center">
           <h2 className="text-2xl font-semibold sm:text-3xl">
             Your next piece of <span className="text-gradient-warm">content</span> is one prompt away.
           </h2>

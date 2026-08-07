@@ -59,7 +59,7 @@ export function TemplatesPage() {
   return (
     <div className="mx-auto max-w-[1600px] px-4 py-6 lg:px-6">
       {/* Hero */}
-      <div className="glass-light relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-primary/15 via-transparent to-transparent p-6 sm:p-10">
+      <div className="glass-ambient glass-edge relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-primary/15 via-transparent to-transparent p-6 sm:p-10">
         <div className="pointer-events-none absolute -right-10 -top-16 h-64 w-64 rounded-full bg-primary/15 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 left-1/3 h-56 w-56 rounded-full bg-brand-2/10 blur-3xl" />
         <span className="relative text-xs font-bold uppercase tracking-[0.22em] text-primary">

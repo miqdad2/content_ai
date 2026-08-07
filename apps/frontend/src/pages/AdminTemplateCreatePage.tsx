@@ -753,7 +753,7 @@ export function AdminTemplateCreatePage() {
             }}
           />
           <div
-            className="glass-strong fixed z-50 min-w-36 overflow-hidden rounded-md p-1 text-sm shadow-md"
+            className="glass-elevated fixed z-50 min-w-36 overflow-hidden rounded-md p-1 text-sm"
             style={{ left: menu.x, top: menu.y }}
           >
             <button

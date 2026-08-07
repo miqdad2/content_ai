@@ -167,9 +167,13 @@ export function BillingPage() {
         {packs?.packs.map((pack, i) => (
           <Card
             key={pack.id}
-            // Card's own .glass-medium class sets border-color, so a border-* override
-            // here would silently lose the cascade — ring uses box-shadow instead, so
-            // it doesn't collide and is what actually renders the highlight.
+            // The recommended pack gets a genuinely more elevated glass tier
+            // (Card's `tier` prop picks one glass-* class internally, never
+            // stacked) plus the existing magenta ring — a ring uses box-shadow,
+            // a different property than the tier's own border-color, so the
+            // two combine cleanly without the class-stacking cascade risk
+            // documented on the tier system itself.
+            tier={i === 1 ? "elevated" : undefined}
             className={i === 1 ? "ring-2 ring-brand-magenta/40" : undefined}
           >
             <CardHeader>

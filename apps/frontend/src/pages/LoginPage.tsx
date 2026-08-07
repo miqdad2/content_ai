@@ -14,7 +14,7 @@ export function LoginPage() {
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-md items-center px-4">
-      <Card className="w-full">
+      <Card tier="elevated" className="w-full">
         <CardContent className="pt-6">
           <AuthForm onSuccess={() => navigate("/", { replace: true })} />
         </CardContent>

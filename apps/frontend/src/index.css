@@ -24,12 +24,12 @@
   --secondary: oklch(0.24 0.03 262);
   --secondary-foreground: oklch(0.97 0.012 258);
   --muted: oklch(0.245 0.026 262);
-  --muted-foreground: oklch(0.715 0.025 258);
+  --muted-foreground: oklch(0.74 0.035 285);
   --accent: oklch(0.27 0.045 246);
   --accent-foreground: oklch(0.97 0.012 258);
   --destructive: oklch(0.62 0.21 18);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.88 0.05 280 / 12%);
+  --border: oklch(0.9 0.045 285 / 16%);
   --input: oklch(0.88 0.05 280 / 14%);
   --ring: oklch(0.62 0.21 293);
   --radius: 0.875rem;
@@ -41,16 +41,47 @@
   --brand-cyan: oklch(0.76 0.12 205);
   --brand-magenta: oklch(0.68 0.19 336);
 
-  /* Translucent surfaces for glass panels, in three intensities:
-   *  - light:  decorative (hero surfaces, promo/CTA bands, floating badges)
-   *  - medium: content (cards, tiles, dashboard widgets, secondary panels)
-   *  - strong: readable/functional (forms, dialogs, billing, login) — mostly
-   *    opaque so blur does minimal work and text stays crisp. */
-  --glass-bg-light: oklch(0.22 0.03 262 / 38%);
-  --glass-bg: oklch(0.22 0.03 262 / 55%);
-  --glass-bg-strong: oklch(0.22 0.03 262 / 88%);
-  --glass-border: oklch(0.85 0.06 280 / 16%);
-  --glass-border-strong: oklch(0.85 0.06 280 / 22%);
+  /* Vertical gradient stops for the primary button — a soft light-to-deep
+   * lavender fill instead of a flat color, see .button's `default` variant. */
+  --primary-gradient-top: oklch(0.7 0.19 293);
+  --primary-gradient-bottom: oklch(0.56 0.21 293);
+
+  /* Translucent surfaces for glass panels, in five intensities (an Apple-
+   * material-inspired system: ambient / functional / content / elevated,
+   * plus the original small-chip "light" tier):
+   *  - light:    small decorative chips/badges/pills.
+   *  - ambient:  the environment itself — navbar shell, hero workspace,
+   *    large decorative surfaces. Most transparent, most blur, a touch of
+   *    saturation, so background light visibly passes through.
+   *  - medium:   content (cards, tiles, dashboard widgets, secondary panels).
+   *  - strong:   readable/functional (forms, toolbars, billing, login) —
+   *    mostly opaque so blur does minimal work and text stays crisp.
+   *  - elevated: dialogs, popovers, mobile drawer, floating controls —
+   *    visually *above* the app shell: brighter edge, deepest shadow.
+   *
+   * Backgrounds are lighter + more transparent than the first glass pass
+   * (was reading as opaque dark-navy panels rather than glass); borders are
+   * brighter, whiter and less saturated (soft lavender-white rim instead of
+   * a visibly purple/dark outline), alphas held in a ~14-24% band so they
+   * read as a luminous edge, not a line. `strong` (forms) is deliberately
+   * pulled the least, since dense text needs to stay crisp. `ambient` is the
+   * environment itself, so it gets the biggest push toward transparency. */
+  --glass-bg-light: oklch(0.34 0.045 278 / 28%);
+  --glass-bg-ambient: oklch(0.46 0.055 288 / 12%);
+  --glass-bg: oklch(0.32 0.045 274 / 40%);
+  --glass-bg-strong: oklch(0.25 0.035 270 / 82%);
+  --glass-bg-elevated: oklch(0.29 0.045 278 / 76%);
+  --glass-border: oklch(0.93 0.035 288 / 18%);
+  --glass-border-ambient: oklch(0.96 0.035 300 / 22%);
+  --glass-border-strong: oklch(0.9 0.04 286 / 20%);
+  --glass-border-elevated: oklch(0.97 0.04 300 / 24%);
+
+  /* Motion — physical-deceleration easing, two duration bands (small
+   * controls vs larger surfaces). Applied where this redesign touches
+   * transitions; not retrofitted across the whole app. */
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-control: 200ms;
+  --duration-surface: 400ms;
 }
 
 @theme inline {
@@ -78,10 +109,14 @@
   --color-brand-cyan: var(--brand-cyan);
   --color-brand-magenta: var(--brand-magenta);
   --color-glass-bg-light: var(--glass-bg-light);
+  --color-glass-bg-ambient: var(--glass-bg-ambient);
   --color-glass-bg: var(--glass-bg);
   --color-glass-bg-strong: var(--glass-bg-strong);
+  --color-glass-bg-elevated: var(--glass-bg-elevated);
   --color-glass-border: var(--glass-border);
+  --color-glass-border-ambient: var(--glass-border-ambient);
   --color-glass-border-strong: var(--glass-border-strong);
+  --color-glass-border-elevated: var(--glass-border-elevated);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -120,20 +155,40 @@
   body {
     min-height: 100vh;
     background-color: var(--color-background);
-    /* Midnight-navy canvas with faint violet + cyan lighting at the top — kept
-     * low-opacity so it reads as ambient light, not a glow effect. */
+    /* Continuous atmospheric environment, not a flat canvas: violet bloom
+     * top-left, lavender/pink diffusion behind the hero, a restrained cyan
+     * glint on the right, deep violet fading to midnight at the bottom.
+     * Large, soft, heavily-overlapping fields with very gradual falloff
+     * (transparent stop pushed past 78%) so they read as one diffused,
+     * fog-like light rather than distinct blobs. Positioned (not `fixed`)
+     * so the absolute rem offsets stay anchored to the actual top of the
+     * document — luminous near the hero/navbar, naturally fading to the
+     * darker base --background by the time the page reaches
+     * Featured/Explore. Target balance: ~50% luminous near the hero,
+     * ~65-70% dark from Explore down. Static (no animated gradient
+     * position/blur — expensive + risks feeling "pulsing" rather than
+     * premium). */
     background-image:
       radial-gradient(
-        60rem 30rem at 12% -8rem,
-        oklch(0.62 0.21 293 / 10%),
-        transparent 62%
+        80rem 52rem at 4% -10rem,
+        oklch(0.62 0.21 293 / 40%),
+        transparent 80%
       ),
       radial-gradient(
-        50rem 26rem at 100% -6rem,
-        oklch(0.76 0.12 205 / 7%),
-        transparent 65%
+        90rem 62rem at 56% 2rem,
+        oklch(0.78 0.13 320 / 38%),
+        transparent 82%
+      ),
+      radial-gradient(
+        62rem 44rem at 100% 4rem,
+        oklch(0.76 0.12 205 / 18%),
+        transparent 72%
+      ),
+      radial-gradient(
+        76rem 54rem at 24% 122%,
+        oklch(0.4 0.1 292 / 22%),
+        transparent 66%
       );
-    background-attachment: fixed;
     background-repeat: no-repeat;
     color: var(--color-foreground);
     font-family:
@@ -177,6 +232,19 @@
   *::-webkit-scrollbar-thumb:hover {
     background-color: oklch(1 0 0 / 22%);
   }
+
+  /* Very slow, small vertical drift for the hero's floating capability
+   * chips — transform-only (cheap), always paired with motion-safe: at the
+   * call site so prefers-reduced-motion drops it entirely. */
+  @keyframes float-slow {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
 }
 
 @layer utilities {
@@ -196,29 +264,96 @@
     color: transparent;
   }
 
-  /* Three-tier glass system — each owns its own background, border and blur,
-   * so a surface only needs this one class (no separate bg/border overrides).
-   *  - glass-light:  hero surfaces, promo bands, floating badges, showcase panels.
-   *  - glass-medium: content cards, tiles, dashboard widgets, secondary panels.
-   *  - glass-strong: forms, dialogs, billing, login — near-opaque, blur does
-   *    minimal work here so dense text stays crisp (not "blur for effect"). */
+  /* Five-tier glass system — each class owns its own background, border and
+   * blur, so a surface only ever needs ONE of these (never stack two on the
+   * same element — on equal specificity the later one in the compiled sheet
+   * silently wins the shared properties; verified the hard way once already
+   * in this codebase). Where an element needs a specific tier chosen at
+   * render time (e.g. Card's `tier` prop), the component picks exactly one
+   * class internally instead of layering an override on top.
+   *  - glass-light:    small decorative chips/badges/pills.
+   *  - glass-ambient:  the environment itself — navbar shell, hero
+   *    workspace, large decorative surfaces. Most transparent, most blur,
+   *    a touch of saturation so background light visibly passes through.
+   *  - glass-medium:   content cards, tiles, dashboard widgets, secondary
+   *    panels. Media should dominate here, not the glass.
+   *  - glass-strong:   forms, toolbars, billing, login — near-opaque, blur
+   *    does minimal work here so dense text stays crisp (not "blur for
+   *    effect").
+   *  - glass-elevated:  dialogs, popovers, mobile drawer, floating
+   *    controls — visually *above* the app shell: brighter edge, deepest
+   *    shadow.
+   *
+   * For the small set of "premium" surfaces that also want a soft top-left
+   * light-reflection highlight (navbar shell, hero workspace, dialogs,
+   * popovers, the landing closing-CTA panel), pair the tier class with the
+   * opt-in `.glass-edge` modifier below — not baked into the tiers
+   * themselves, see that class's comment for why. */
   .glass-light {
     background: var(--glass-bg-light);
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
   }
+  .glass-ambient {
+    background: var(--glass-bg-ambient);
+    border: 1px solid var(--glass-border-ambient);
+    backdrop-filter: blur(42px) saturate(170%);
+    -webkit-backdrop-filter: blur(42px) saturate(170%);
+    box-shadow:
+      0 24px 60px -26px oklch(0 0 0 / 38%),
+      0 0 90px -28px oklch(0.72 0.15 305 / 32%),
+      inset 0 1px 0 0 oklch(1 0 0 / 16%);
+  }
   .glass-medium {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(22px) saturate(120%);
+    -webkit-backdrop-filter: blur(22px) saturate(120%);
   }
   .glass-strong {
     background: var(--glass-bg-strong);
     border: 1px solid var(--glass-border-strong);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
+  }
+  .glass-elevated {
+    background: var(--glass-bg-elevated);
+    border: 1px solid var(--glass-border-elevated);
+    backdrop-filter: blur(38px) saturate(160%);
+    -webkit-backdrop-filter: blur(38px) saturate(160%);
+    box-shadow:
+      0 28px 70px -18px oklch(0 0 0 / 48%),
+      0 12px 32px -12px oklch(0.65 0.19 300 / 26%),
+      inset 0 1px 0 0 oklch(1 0 0 / 18%);
+  }
+  /*
+   * Opt-in inner-highlight modifier — deliberately NOT baked into
+   * .glass-ambient/.glass-strong/.glass-elevated themselves, because that
+   * would silently apply to every existing usage of those classes across
+   * the app (form sub-panels, etc.) whether or not that element already has
+   * a positioning context (`relative`/`fixed`/`absolute`) for the ::before
+   * to anchor to — most existing usages don't, so the highlight would
+   * render relative to some distant ancestor instead of the small panel it
+   * lives on. This class deliberately does NOT set `position` itself —
+   * some call sites already have `fixed` (Dialog), and `position:relative`
+   * here would fight that the same way a stray border override once fought
+   * a tier class's own border (documented in the tier comment above). Only
+   * add `glass-edge` at a call site that already carries `relative` /
+   * `fixed` / `absolute` + `overflow-hidden` of its own. */
+  .glass-edge::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(
+      135deg,
+      oklch(1 0 0 / 20%) 0%,
+      oklch(1 0 0 / 6%) 18%,
+      transparent 34%
+    );
   }
 
   /* Sparing violet→magenta headline gradient, for marketing-only emphasis —
