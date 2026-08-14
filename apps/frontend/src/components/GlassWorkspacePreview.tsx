@@ -4,11 +4,14 @@ import { ArrowUpRight, Film, ImageIcon, LayoutGrid, Sparkles } from "lucide-reac
 import { Logo } from "@/components/Logo";
 
 /**
- * Purely decorative preview of the content.ai workspace, shown beside the
- * landing hero. No API calls, no demo-data reads, no auth reads — the one
- * real interactive element (the CTA) reuses the exact signedIn-branching
- * pattern LandingPage already uses for its other CTAs. Every clip reused
- * here already exists in LandingPage's own SHOWCASE array — no new assets.
+ * Purely decorative preview of the cre8.ai workspace. Originally shown
+ * beside the landing hero; relocated to its own section below the hero in
+ * UNIT 04 once the hero became the cinematic 3D scene (component itself is
+ * unchanged, only its position on the page moved — see LandingPage.tsx).
+ * No API calls, no demo-data reads, no auth reads — the one real
+ * interactive element (the CTA) reuses the exact signedIn-branching pattern
+ * LandingPage already uses for its other CTAs. Every clip reused here
+ * already exists in LandingPage's own SHOWCASE array — no new assets.
  */
 const TOOLS = [
   { icon: Film, label: "Video" },
@@ -60,7 +63,7 @@ export function GlassWorkspacePreview({ signedIn, onSignInRequired }: Props) {
   const spotStyle: CSSProperties = spot
     ? {
         opacity: 1,
-        background: `radial-gradient(280px circle at ${spot.x}% ${spot.y}%, oklch(0.85 0.08 300 / 14%), transparent 70%)`,
+        background: `radial-gradient(280px circle at ${spot.x}% ${spot.y}%, oklch(0.75 0.1 235 / 16%), transparent 70%)`,
       }
     : { opacity: 0 };
 

@@ -63,11 +63,11 @@ export function BillingPage() {
           key: order.razorpayKeyId,
           amount: order.amount,
           currency: order.currency,
-          name: "content.ai",
+          name: "cre8.ai",
           description: `${order.packName} — ${order.credits} credits`,
           order_id: order.orderId,
           prefill: { email: session?.user?.email, name: session?.user?.name ?? undefined },
-          theme: { color: "#6d28d9" },
+          theme: { color: "#2F7BFF" },
           modal: { ondismiss: () => setBuying(null) },
           handler: async (resp) => {
             try {

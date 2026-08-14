@@ -1,18 +1,27 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { X } from "lucide-react";
+import { isCinematicRoute } from "@/lib/publicRoutes";
 
 const STORAGE_KEY = "va_promo_dismissed";
 
 /**
  * Full-width primary-colored promo bar pinned above the navbar.
  * Dismissible; the choice is remembered in localStorage.
+ *
+ * Hidden on cinematic public routes (/ and /departments) — UNIT 04's visual
+ * QA confirmed the bright bar clashes with the premium cinematic direction
+ * on those two pages specifically. Still shown everywhere else (login,
+ * legal, and every authenticated/commercial page), so the underlying
+ * promotional messaging/behavior is unchanged, not deleted — just not
+ * rendered on the two pages it visually damages.
  */
 export function PromoBanner() {
+  const location = useLocation();
   const [dismissed, setDismissed] = useState(
     () => typeof window !== "undefined" && localStorage.getItem(STORAGE_KEY) === "1",
   );
-  if (dismissed) return null;
+  if (dismissed || isCinematicRoute(location.pathname)) return null;
 
   return (
     <div className="relative z-50 flex items-center justify-center bg-primary px-10 py-2 text-primary-foreground">

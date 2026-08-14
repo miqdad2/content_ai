@@ -3,11 +3,19 @@ import { Logo } from "./Logo";
 
 const CONTACT_EMAIL = "hello@content.ai";
 
-const PRODUCT_LINKS = [
-  { to: "/video", label: "Video" },
-  { to: "/image", label: "Image" },
-  { to: "/user/templates", label: "Templates" },
+/**
+ * Public-shell footer groups. "Pricing" points at the existing `/billing`
+ * page (no dedicated `/pricing` route yet — see Navbar's PUBLIC_NAV_LINKS
+ * comment for the same decision). Deliberately does not list the
+ * authenticated tools (Video/Image/Templates/Avatar) — those are already
+ * one click away via the app nav for signed-in users, and this is now a
+ * site-wide/public-facing footer, not an in-app shortcut rail.
+ */
+const PLATFORM_LINKS = [
+  { to: "/", label: "Home" },
+  { to: "/departments", label: "Departments" },
   { to: "/billing", label: "Pricing" },
+  { to: "/login", label: "Login" },
 ];
 
 const LEGAL_LINKS = [
@@ -27,7 +35,8 @@ export function Footer() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-32"
         style={{
-          background: "linear-gradient(180deg, oklch(0.62 0.21 293 / 7%), transparent)",
+          background: "linear-gradient(180deg, var(--primary) 0%, transparent 100%)",
+          opacity: 0.07,
         }}
       />
       <div className="mx-auto grid max-w-[1600px] gap-10 px-4 py-12 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:px-6">
@@ -42,11 +51,11 @@ export function Footer() {
           </p>
         </div>
 
-        {/* Product */}
+        {/* Platform */}
         <div>
-          <h3 className="text-sm font-semibold">Product</h3>
+          <h3 className="text-sm font-semibold">Platform</h3>
           <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-            {PRODUCT_LINKS.map((l) => (
+            {PLATFORM_LINKS.map((l) => (
               <li key={l.to}>
                 <Link to={l.to} className="transition-colors hover:text-foreground">
                   {l.label}
@@ -88,7 +97,7 @@ export function Footer() {
 
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-[1600px] flex-col items-center justify-between gap-2 px-4 py-5 text-xs text-muted-foreground sm:flex-row lg:px-6">
-          <span>© {new Date().getFullYear()} content.ai. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} cre8.ai. All rights reserved.</span>
           <div className="flex items-center gap-4">
             {LEGAL_LINKS.map((l) => (
               <Link key={l.to} to={l.to} className="transition-colors hover:text-foreground">

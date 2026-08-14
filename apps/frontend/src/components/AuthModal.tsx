@@ -39,7 +39,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                 Kling 3.0 &amp; Seedance 2.0
               </h3>
               <p className="mt-1 text-sm text-white/80">
-                The best generative models, for the best price — only on content.ai.
+                The best generative models, for the best price — only on cre8.ai.
               </p>
             </div>
           </div>

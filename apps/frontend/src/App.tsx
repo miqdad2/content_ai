@@ -2,7 +2,9 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { PromoBanner } from "@/components/PromoBanner";
 import { Footer } from "@/components/Footer";
+import { PublicBackdrop } from "@/components/PublicBackdrop";
 import { LandingPage } from "@/pages/LandingPage";
+import { DepartmentsPage } from "@/pages/DepartmentsPage";
 import { VideoPage } from "@/pages/VideoPage";
 import { ImagePage } from "@/pages/ImagePage";
 import { FaceSwapPage } from "@/pages/FaceSwapPage";
@@ -20,11 +22,13 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen">
+        <PublicBackdrop />
         <PromoBanner />
         <Navbar />
         <main>
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/departments" element={<DepartmentsPage />} />
             <Route path="/video" element={<VideoPage />} />
             <Route path="/image" element={<ImagePage />} />
             <Route path="/face-swap" element={<FaceSwapPage />} />

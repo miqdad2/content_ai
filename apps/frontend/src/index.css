@@ -3,48 +3,60 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * content.ai — controlled glassmorphism theme.
- * Midnight-navy foundation with violet/lavender primary lighting and a subtle
- * cyan accent. Surfaces are translucent + blurred (glass) where they float
- * over content (nav, dialogs, popovers, cards); working surfaces stay solid
- * and high-contrast so dense UI (forms, timelines) stays readable. No light
- * theme yet.
+ * cre8.ai — mission-control design foundation.
+ * Near-black / deep-navy base with electric-blue primary lighting and a
+ * cyan secondary accent — premium cinematic space-tech, not generic
+ * glassmorphism. Surfaces are translucent + blurred (glass) only where they
+ * float over content (nav, dialogs, popovers, premium feature panels);
+ * working surfaces (forms, timelines, dense dashboards) stay solid and
+ * high-contrast so they stay readable during long sessions. No light theme
+ * yet.
+ *
+ * `--brand-2` and `--brand-magenta` are legacy token NAMES kept as
+ * compatibility aliases so existing call sites (Logo suffix, promo badges,
+ * the Billing "Popular" plan highlight, `.text-gradient-warm`) don't need to
+ * be touched in this unit — their VALUES have been moved off violet/lavender/
+ * magenta onto the new blue/cyan family. Do not start new usage of these two
+ * names for new features; reach for `--brand-cyan` or `--primary` instead.
  */
 :root,
 .dark {
-  --background: oklch(0.145 0.028 262);
-  --foreground: oklch(0.97 0.012 258);
-  --card: oklch(0.205 0.032 262);
-  --card-foreground: oklch(0.97 0.012 258);
-  --popover: oklch(0.19 0.032 262);
-  --popover-foreground: oklch(0.97 0.012 258);
-  /* Violet primary CTA — the content.ai signature. */
-  --primary: oklch(0.62 0.21 293);
-  --primary-foreground: oklch(0.99 0.006 293);
-  --secondary: oklch(0.24 0.03 262);
-  --secondary-foreground: oklch(0.97 0.012 258);
-  --muted: oklch(0.245 0.026 262);
-  --muted-foreground: oklch(0.74 0.035 285);
-  --accent: oklch(0.27 0.045 246);
-  --accent-foreground: oklch(0.97 0.012 258);
+  --background: oklch(0.135 0.024 258);
+  --foreground: oklch(0.97 0.012 250);
+  --card: oklch(0.195 0.028 258);
+  --card-foreground: oklch(0.97 0.012 250);
+  --popover: oklch(0.185 0.03 258);
+  --popover-foreground: oklch(0.97 0.012 250);
+  /* Electric-blue primary CTA — the cre8.ai signature. */
+  --primary: oklch(0.62 0.19 256);
+  --primary-foreground: oklch(0.99 0.005 256);
+  --secondary: oklch(0.23 0.026 258);
+  --secondary-foreground: oklch(0.97 0.012 250);
+  --muted: oklch(0.235 0.022 258);
+  --muted-foreground: oklch(0.74 0.03 250);
+  --accent: oklch(0.26 0.04 246);
+  --accent-foreground: oklch(0.97 0.012 250);
   --destructive: oklch(0.62 0.21 18);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.9 0.045 285 / 16%);
-  --input: oklch(0.88 0.05 280 / 14%);
-  --ring: oklch(0.62 0.21 293);
+  --border: oklch(0.9 0.025 255 / 14%);
+  --input: oklch(0.88 0.03 255 / 13%);
+  --ring: oklch(0.68 0.17 250);
   --radius: 0.875rem;
 
-  /* Brand accents: violet primary, lavender secondary, subtle cyan lighting,
-   * magenta reserved for sparing premium highlights (see .glass-* below). */
-  --brand: oklch(0.62 0.21 293);
-  --brand-2: oklch(0.78 0.11 300);
-  --brand-cyan: oklch(0.76 0.12 205);
-  --brand-magenta: oklch(0.68 0.19 336);
+  /* Brand accents: electric blue primary, cyan secondary, a lighter
+   * blue-cyan tint for small accents/wordmarks, and a "premium" cyan pop
+   * reserved for the rare featured/popular highlight — no violet, no
+   * magenta anywhere in the rendered UI. */
+  --brand: oklch(0.62 0.19 256);
+  --brand-2: oklch(0.78 0.11 222);
+  --brand-cyan: oklch(0.8 0.14 200);
+  --brand-magenta: oklch(0.78 0.15 193);
 
-  /* Vertical gradient stops for the primary button — a soft light-to-deep
-   * lavender fill instead of a flat color, see .button's `default` variant. */
-  --primary-gradient-top: oklch(0.7 0.19 293);
-  --primary-gradient-bottom: oklch(0.56 0.21 293);
+  /* Vertical gradient stops for the primary button — a soft blue-cyan-to-
+   * deep-electric-blue fill instead of a flat color, see .button's `default`
+   * variant. */
+  --primary-gradient-top: oklch(0.72 0.15 232);
+  --primary-gradient-bottom: oklch(0.53 0.2 258);
 
   /* Translucent surfaces for glass panels, in five intensities (an Apple-
    * material-inspired system: ambient / functional / content / elevated,
@@ -59,28 +71,45 @@
    *  - elevated: dialogs, popovers, mobile drawer, floating controls —
    *    visually *above* the app shell: brighter edge, deepest shadow.
    *
-   * Backgrounds are lighter + more transparent than the first glass pass
-   * (was reading as opaque dark-navy panels rather than glass); borders are
-   * brighter, whiter and less saturated (soft lavender-white rim instead of
-   * a visibly purple/dark outline), alphas held in a ~14-24% band so they
-   * read as a luminous edge, not a line. `strong` (forms) is deliberately
-   * pulled the least, since dense text needs to stay crisp. `ambient` is the
-   * environment itself, so it gets the biggest push toward transparency. */
-  --glass-bg-light: oklch(0.34 0.045 278 / 28%);
-  --glass-bg-ambient: oklch(0.46 0.055 288 / 12%);
-  --glass-bg: oklch(0.32 0.045 274 / 40%);
-  --glass-bg-strong: oklch(0.25 0.035 270 / 82%);
-  --glass-bg-elevated: oklch(0.29 0.045 278 / 76%);
-  --glass-border: oklch(0.93 0.035 288 / 18%);
-  --glass-border-ambient: oklch(0.96 0.035 300 / 22%);
-  --glass-border-strong: oklch(0.9 0.04 286 / 20%);
-  --glass-border-elevated: oklch(0.97 0.04 300 / 24%);
+   * Backgrounds carry a blue-black tint rather than the old lavender-grey
+   * one; borders read as a cool white/blue edge instead of a purple outline,
+   * alphas held in a ~13-24% band so they read as a luminous edge, not a
+   * line. `strong` (forms) is deliberately pulled the least, since dense
+   * text needs to stay crisp. `ambient` is the environment itself, so it
+   * gets the biggest push toward transparency. */
+  --glass-bg-light: oklch(0.32 0.03 256 / 26%);
+  --glass-bg-ambient: oklch(0.28 0.035 258 / 12%);
+  --glass-bg: oklch(0.3 0.032 258 / 40%);
+  --glass-bg-strong: oklch(0.24 0.028 258 / 82%);
+  --glass-bg-elevated: oklch(0.27 0.032 258 / 76%);
+  --glass-border: oklch(0.92 0.025 250 / 16%);
+  --glass-border-ambient: oklch(0.94 0.035 235 / 20%);
+  --glass-border-strong: oklch(0.9 0.028 250 / 18%);
+  --glass-border-elevated: oklch(0.95 0.05 210 / 22%);
+  /* Active/selected edge — the one place a slightly stronger blue border is
+   * intentional (selected surfaces, focused panels). Not used by the
+   * neutral tiers above. */
+  --border-active: oklch(0.62 0.19 256 / 55%);
 
-  /* Motion — physical-deceleration easing, two duration bands (small
-   * controls vs larger surfaces). Applied where this redesign touches
+  /* Restrained neutral elevation (dark-canvas-tuned — Tailwind's stock
+   * shadow scale reads as almost invisible on a near-black background) plus
+   * two selective colored glows. Glows are intentionally rare — see the
+   * `.shadow-glow-*` usage note below; do not apply to every card. */
+  --elevation-xs: 0 1px 2px -1px oklch(0 0 0 / 32%);
+  --elevation-sm: 0 4px 10px -4px oklch(0 0 0 / 38%);
+  --elevation-md: 0 12px 28px -10px oklch(0 0 0 / 45%);
+  --elevation-lg: 0 24px 56px -18px oklch(0 0 0 / 52%);
+  --shadow-glow-blue: 0 0 0 1px oklch(0.62 0.19 256 / 30%), 0 8px 28px -6px oklch(0.62 0.19 256 / 35%);
+  --shadow-glow-cyan: 0 0 0 1px oklch(0.8 0.14 200 / 32%), 0 8px 28px -6px oklch(0.8 0.14 200 / 32%);
+
+  /* Motion — physical-deceleration easing, three duration bands (small
+   * controls / standard UI transitions / larger surfaces). A fourth,
+   * "cinematic" band is reserved for later public-page motion units and
+   * intentionally not defined yet. Applied where redesign work touches
    * transitions; not retrofitted across the whole app. */
   --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
   --duration-control: 200ms;
+  --duration-standard: 275ms;
   --duration-surface: 400ms;
 }
 
@@ -121,6 +150,15 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* Restrained dark-canvas elevation scale — replaces Tailwind's stock
+   * (light-mode-tuned) shadow-xs/sm/md/lg output for this project. Cards,
+   * dialogs, and panels that already use `shadow-md`/`shadow-lg` etc.
+   * inherit this automatically; no component edits required. */
+  --shadow-xs: var(--elevation-xs);
+  --shadow-sm: var(--elevation-sm);
+  --shadow-md: var(--elevation-md);
+  --shadow-lg: var(--elevation-lg);
 }
 
 @layer base {
@@ -155,38 +193,37 @@
   body {
     min-height: 100vh;
     background-color: var(--color-background);
-    /* Continuous atmospheric environment, not a flat canvas: violet bloom
-     * top-left, lavender/pink diffusion behind the hero, a restrained cyan
-     * glint on the right, deep violet fading to midnight at the bottom.
-     * Large, soft, heavily-overlapping fields with very gradual falloff
-     * (transparent stop pushed past 78%) so they read as one diffused,
-     * fog-like light rather than distinct blobs. Positioned (not `fixed`)
-     * so the absolute rem offsets stay anchored to the actual top of the
-     * document — luminous near the hero/navbar, naturally fading to the
-     * darker base --background by the time the page reaches
-     * Featured/Explore. Target balance: ~50% luminous near the hero,
-     * ~65-70% dark from Explore down. Static (no animated gradient
-     * position/blur — expensive + risks feeling "pulsing" rather than
-     * premium). */
+    /* Continuous atmospheric environment, not a flat canvas: a restrained
+     * electric-blue bloom top-left, a soft blue-cyan diffusion behind the
+     * hero, a brighter cyan glint on the right, deep blue fading to
+     * midnight at the bottom. Large, soft, heavily-overlapping fields with
+     * very gradual falloff (transparent stop pushed past 78%) so they read
+     * as one diffused, fog-like light rather than distinct blobs — large
+     * negative space stays the dominant impression, not the glow.
+     * Positioned (not `fixed`) so the absolute rem offsets stay anchored to
+     * the actual top of the document — luminous near the hero/navbar,
+     * naturally fading to the darker base --background by the time the page
+     * reaches Featured/Explore. Static (no animated gradient position/blur
+     * — expensive + risks feeling "pulsing" rather than premium). */
     background-image:
       radial-gradient(
         80rem 52rem at 4% -10rem,
-        oklch(0.62 0.21 293 / 40%),
+        oklch(0.6 0.18 256 / 32%),
         transparent 80%
       ),
       radial-gradient(
         90rem 62rem at 56% 2rem,
-        oklch(0.78 0.13 320 / 38%),
+        oklch(0.62 0.13 232 / 24%),
         transparent 82%
       ),
       radial-gradient(
         62rem 44rem at 100% 4rem,
-        oklch(0.76 0.12 205 / 18%),
+        oklch(0.78 0.14 200 / 20%),
         transparent 72%
       ),
       radial-gradient(
         76rem 54rem at 24% 122%,
-        oklch(0.4 0.1 292 / 22%),
+        oklch(0.38 0.09 258 / 22%),
         transparent 66%
       );
     background-repeat: no-repeat;
@@ -210,14 +247,14 @@
     letter-spacing: -0.02em;
   }
   ::selection {
-    background-color: oklch(0.62 0.21 293 / 35%);
+    background-color: oklch(0.62 0.19 256 / 35%);
     color: oklch(0.99 0 0);
   }
 
-  /* Sleek, unobtrusive dark scrollbars, tinted toward the violet-lavender border. */
+  /* Sleek, unobtrusive dark scrollbars, tinted toward the blue border. */
   * {
     scrollbar-width: thin;
-    scrollbar-color: oklch(0.85 0.06 280 / 18%) transparent;
+    scrollbar-color: oklch(0.85 0.04 255 / 18%) transparent;
   }
   *::-webkit-scrollbar {
     width: 10px;
@@ -252,12 +289,12 @@
     text-wrap: balance;
   }
 
-  /* Subtle white→lavender gradient text for hero headlines. */
+  /* Subtle white→icy-blue gradient text for hero headlines. */
   .text-gradient {
     background: linear-gradient(
       180deg,
       oklch(0.99 0 0),
-      oklch(0.78 0.11 300)
+      oklch(0.82 0.08 235)
     );
     -webkit-background-clip: text;
     background-clip: text;
@@ -284,6 +321,10 @@
    *    controls — visually *above* the app shell: brighter edge, deepest
    *    shadow.
    *
+   * Blur amounts are deliberately restrained versus the original pass (was
+   * closer to generic heavy glassmorphism) — cre8.ai should read as
+   * controlled glass, not a frosted-everything look.
+   *
    * For the small set of "premium" surfaces that also want a soft top-left
    * light-reflection highlight (navbar shell, hero workspace, dialogs,
    * popovers, the landing closing-CTA panel), pair the tier class with the
@@ -298,34 +339,50 @@
   .glass-ambient {
     background: var(--glass-bg-ambient);
     border: 1px solid var(--glass-border-ambient);
-    backdrop-filter: blur(42px) saturate(170%);
-    -webkit-backdrop-filter: blur(42px) saturate(170%);
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
     box-shadow:
-      0 24px 60px -26px oklch(0 0 0 / 38%),
-      0 0 90px -28px oklch(0.72 0.15 305 / 32%),
-      inset 0 1px 0 0 oklch(1 0 0 / 16%);
+      0 24px 60px -26px oklch(0 0 0 / 42%),
+      0 0 70px -26px oklch(0.62 0.16 240 / 26%),
+      inset 0 1px 0 0 oklch(1 0 0 / 14%);
   }
   .glass-medium {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    backdrop-filter: blur(22px) saturate(120%);
-    -webkit-backdrop-filter: blur(22px) saturate(120%);
+    backdrop-filter: blur(20px) saturate(115%);
+    -webkit-backdrop-filter: blur(20px) saturate(115%);
   }
   .glass-strong {
     background: var(--glass-bg-strong);
     border: 1px solid var(--glass-border-strong);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
   }
   .glass-elevated {
     background: var(--glass-bg-elevated);
     border: 1px solid var(--glass-border-elevated);
-    backdrop-filter: blur(38px) saturate(160%);
-    -webkit-backdrop-filter: blur(38px) saturate(160%);
+    backdrop-filter: blur(30px) saturate(140%);
+    -webkit-backdrop-filter: blur(30px) saturate(140%);
     box-shadow:
-      0 28px 70px -18px oklch(0 0 0 / 48%),
-      0 12px 32px -12px oklch(0.65 0.19 300 / 26%),
-      inset 0 1px 0 0 oklch(1 0 0 / 18%);
+      0 28px 70px -18px oklch(0 0 0 / 52%),
+      0 12px 30px -12px oklch(0.6 0.17 250 / 24%),
+      inset 0 1px 0 0 oklch(1 0 0 / 16%);
+  }
+  /* Sixth tier, introduced for the public shell (UNIT 03): a darker,
+   * flatter black/navy glass with a subtle electric-blue rim and a whisper
+   * of cyan in the inner highlight — "mission-control chrome," not the
+   * warmer/more saturated .glass-ambient used by the authenticated app
+   * shell. Reserved for the public floating navbar (desktop bar + mobile
+   * sheet) only; do not use for content cards or dialogs. */
+  .glass-nav {
+    background: oklch(0.12 0.02 258 / 64%);
+    border: 1px solid oklch(0.62 0.19 256 / 24%);
+    backdrop-filter: blur(20px) saturate(130%);
+    -webkit-backdrop-filter: blur(20px) saturate(130%);
+    box-shadow:
+      0 18px 46px -22px oklch(0 0 0 / 55%),
+      0 0 32px -18px oklch(0.62 0.19 256 / 18%),
+      inset 0 1px 0 0 oklch(0.8 0.14 200 / 10%);
   }
   /*
    * Opt-in inner-highlight modifier — deliberately NOT baked into
@@ -356,12 +413,75 @@
     );
   }
 
-  /* Sparing violet→magenta headline gradient, for marketing-only emphasis —
-   * distinct from .text-gradient (white→lavender), not a repeat of it. */
+  /* Sparing electric-blue→cyan headline gradient, for marketing-only
+   * emphasis — distinct from .text-gradient (white→icy-blue), not a repeat
+   * of it. References the semantic tokens directly, so it already tracks
+   * the current --primary/--brand-magenta values above with no separate
+   * edit needed here. */
   .text-gradient-warm {
     background: linear-gradient(135deg, var(--primary), var(--brand-magenta));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+
+  /* --- cre8.ai atmosphere foundation ---------------------------------- *
+   * Reusable building blocks for future public/cinematic page work (landing
+   * hero, department universe, pricing). Intentionally NOT applied to any
+   * page in this unit — see UNIT 02 scope: foundation only, full scene
+   * composition belongs to the landing/department units. */
+
+  /* Full-bleed atmospheric wash — the same restrained blue/cyan field used
+   * on `body` above, packaged as an opt-in class for a specific section
+   * instead of the whole page. Apply to a `relative` container; this class
+   * only sets `background-image`, not position/sizing. */
+  .cre8-atmosphere {
+    background-image:
+      radial-gradient(70rem 46rem at 10% -8rem, oklch(0.6 0.18 256 / 28%), transparent 78%),
+      radial-gradient(64rem 42rem at 90% 6rem, oklch(0.78 0.14 200 / 16%), transparent 74%),
+      radial-gradient(60rem 46rem at 30% 110%, oklch(0.38 0.09 258 / 20%), transparent 66%);
+    background-repeat: no-repeat;
+  }
+
+  /* A single soft blue corner glow — smaller and cheaper than
+   * .cre8-atmosphere, for a section or card that wants one restrained bloom
+   * rather than a full scene. */
+  .cre8-blue-haze {
+    background-image: radial-gradient(
+      46rem 32rem at 20% 0%,
+      oklch(0.6 0.17 256 / 24%),
+      transparent 72%
+    );
+    background-repeat: no-repeat;
+  }
+
+  /* Thin cyan rim-light for a premium/elevated panel edge — an inset glow,
+   * not a fill. Pair with `overflow-hidden` + a border-radius on the same
+   * element. Deliberately subtle: this is a highlight, not a neon outline. */
+  .cre8-cyan-rim {
+    box-shadow: inset 0 0 0 1px oklch(0.8 0.14 200 / 24%), inset 0 1px 18px -6px oklch(0.8 0.14 200 / 20%);
+  }
+
+  /* Low-density, low-opacity CSS-only star field — decorative, static (no
+   * animation in this unit), and cheap: a handful of repeating radial dots
+   * at two scales instead of a canvas/WebGL field or a downloaded image.
+   * Apply to a `relative`/`absolute` decorative layer, not to a text
+   * container — it does not affect layout or block pointer events on its
+   * own (add `pointer-events-none` at the call site when used as an
+   * overlay). Opacity is intentionally low enough to never compete with
+   * foreground readability. */
+  .cre8-space-field {
+    background-image:
+      radial-gradient(1px 1px at 12% 18%, oklch(1 0 0 / 55%), transparent 100%),
+      radial-gradient(1px 1px at 34% 64%, oklch(1 0 0 / 40%), transparent 100%),
+      radial-gradient(1.5px 1.5px at 58% 28%, oklch(1 0 0 / 50%), transparent 100%),
+      radial-gradient(1px 1px at 76% 82%, oklch(1 0 0 / 35%), transparent 100%),
+      radial-gradient(1px 1px at 88% 12%, oklch(1 0 0 / 45%), transparent 100%),
+      radial-gradient(1.5px 1.5px at 6% 84%, oklch(1 0 0 / 35%), transparent 100%),
+      radial-gradient(1px 1px at 46% 92%, oklch(1 0 0 / 40%), transparent 100%),
+      radial-gradient(1px 1px at 68% 48%, oklch(1 0 0 / 30%), transparent 100%);
+    background-repeat: repeat;
+    background-size: 340px 340px;
+    opacity: 0.5;
   }
 }

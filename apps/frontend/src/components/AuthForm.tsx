@@ -85,7 +85,7 @@ export function AuthForm({ onSuccess, callbackURL }: AuthFormProps) {
       <div className="flex flex-col items-center gap-3 text-center">
         <Logo showWordmark={false} size="lg" />
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Welcome to content.ai</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Welcome to cre8.ai</h2>
           <p className="mt-1 text-sm text-muted-foreground">Sign up and generate for free</p>
         </div>
       </div>

@@ -36,7 +36,7 @@ export function isDemoMode(): boolean {
   return import.meta.env.VITE_DEMO_MODE === "true";
 }
 
-export const DEMO_EMAIL = "demo@content.ai";
+export const DEMO_EMAIL = "demo@cre8.ai";
 export const DEMO_PASSWORD = "demo1234";
 
 // ---------------------------------------------------------------------------
@@ -68,7 +68,7 @@ interface DemoSessionData {
 
 const DEMO_USER: DemoUser = {
   id: "content-ai-demo-user",
-  name: "Content.ai Demo",
+  name: "cre8.ai Demo",
   email: DEMO_EMAIL,
   image: null,
   demoPlan: "Agency",

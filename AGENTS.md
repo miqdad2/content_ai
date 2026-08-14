@@ -1,238 +1,611 @@
 # AGENTS.md
 
-Guidance for AI agents working in this repository.
+Guidance for AI coding agents working in this repository.
 
-## Project overview
+## Read this first
 
-Video Arena is a generative-media SaaS (video + image generation and face swap).
-It is a **bun**-managed **Turborepo** monorepo.
+This repository is actively migrating from the legacy Pixovid / Video Arena / content.ai product into **cre8.ai**.
 
-- `apps/frontend` — React + Vite + TypeScript SPA. Tailwind v4 + shadcn-style UI
-  (components in `src/components/ui`). Auth via `better-auth/react`
-  (`src/lib/auth-client.ts`). API calls in `src/lib/api.ts`. Routes: `/` (video),
-  `/image`, `/face-swap`, `/user/templates`, `/user/avatar`,
-  `/admin/template/create`. Each page reuses the create/library tab layout; shared
-  bits live in `components/FileField.tsx` and `components/StatusBadge.tsx`.
-  `src/lib/useMe.ts` loads `/api/me` (admin flag) to gate the admin nav link.
-  The admin template creator uses a hand-built Premiere-style timeline in
-  `components/timeline/` (`Timeline.tsx`, `BlockInspector.tsx`, `AudioClipInspector.tsx`,
-  `TemplateSetupForm.tsx`). Templates start with an **empty timeline** (no fixed
-  duration — it grows to fit the furthest clip). `Timeline.tsx` has video lanes
-  (V1, V2, …) and audio lanes (A1, A2, …); both video blocks and audio clips can be
-  dragged/cropped. A program monitor + play/pause/stop transport scrubs a playhead
-  (rAF-driven) and previews each block's frames — or, if a block has been "baked"
-  (or is an uploaded video), plays that clip — while every audio clip plays via a
-  hidden `<audio>` element synced to the playhead (an in-browser mix preview).
-- `apps/backend` — TypeScript + Express API. Run directly with **bun** (no build step).
-  - `src/auth.ts` — better-auth (email/password + Google), Prisma adapter.
-  - `src/lib/openrouter.ts` — OpenRouter client: video (submit + poll) **and**
-    image (`generateImage`, `listImageModels`) generation, plus video model list.
-  - `src/lib/facefusion.ts` — calls the self-hosted FaceFusion swap service over HTTP.
-    The frame face-swap step in `renderBlockClip` is provider-pluggable via
-    `SWAP_PROVIDER`: `facefusion` (classic pixel swap) or `flux` (diffusion identity
-    edit through an OpenRouter image model `OPENROUTER_SWAP_MODEL`, default
-    `black-forest-labs/flux.2-klein-4b`, via `swapFaceWithImageModel`). The `flux`
-    path also honors a per-block `swapContext` prompt. Verify a model with
-    `scripts/test-flux-swap.ts`.
-  - `src/lib/storage.ts` — MinIO (S3-compatible) object-store client.
-  - `src/lib/uploads.ts` — shared multer instance + image helpers (`extFromMime`,
-    `toDataUrl`); reused by every route that accepts uploads.
-  - `src/lib/ffmpeg.ts` — shells out to **ffmpeg** to stitch template clips
-    together (scale/pad to a common size) and mix any number of positioned audio
-    parts over them (`AudioPart[]`: each trimmed + `adelay`ed to its start, summed
-    with `amix`), to extract thumbnails, and to read an uploaded file's duration
-    (`probeMediaDuration`, via **ffprobe**). ffmpeg is installed in the backend
-    Docker image.
-  - `src/lib/templateRender.ts` + `src/lib/runRender.ts` — synchronous template
-    render pipeline. `renderBlockClip()` generates one block's clip (the block's
-    chosen avatar slot is passed as the OpenRouter reference image and, when
-    `faceSwapStart`/`faceSwapEnd` are set, is face-swapped onto the block's base
-    start/end frame); `renderTemplate()` runs it for every block, stitches the clips,
-    mixes the template's audio clips over them, and makes a thumbnail. The timeline
-    has no fixed length — it runs to the furthest clip (video *or* audio), padding
-    the video with black if audio extends past it. `renderBlockClip()` is also reused
-    by the per-block "bake" route. Blocks reference avatars by slot — never per-block uploads.
-    On **export** the cover thumbnail is **AI-generated from the block prompts**
-    (`generateAiThumbnail` → OpenRouter image model `OPENROUTER_THUMBNAIL_MODEL`),
-    falling back to an ffmpeg frame grab on error; user renders still use a frame grab.
-  - `src/lib/templateSerialize.ts` — attaches public URLs to template/block/render rows.
-  - `src/middleware/requireAdmin.ts` — gates admin routes; lazily promotes emails
-    in `ADMIN_EMAILS` to the `admin` role. `resolveIsAdmin` is reused by `/api/me`.
-  - `src/routes/{videos,images,faceswaps}.ts` — CRUD + generation per media type.
-  - `src/routes/avatars.ts` — user avatars (1-2 photos; first photo = face source).
-  - `src/routes/templates.ts` — user-facing templates (`/api/templates`) + their
-    renders (`/api/template-renders`).
-  - `src/routes/adminTemplates.ts` — admin CRUD for templates, blocks **and audio
-    clips** (`/audio`, `/audio/:clipId`), plus `/blocks/:id/bake` (generate one
-    block's preview clip) and `/export` (render + publish). `/api/admin/templates`,
-    admin-only. Template create/patch no longer take an upfront audio file or
-    duration — audio is added per-clip in the editor.
-  - `src/routes/me.ts` — `/api/me` → `{ id, email, isAdmin, credits }`.
-  - `src/routes/models.ts` — `/api/models[/video]` (video) and `/api/models/image`.
-  - `src/routes/credits.ts` — credits & billing (`/api/credits`): balance + ledger
-    (`GET /`), packs + per-action prices + checkout config (`GET /packs`), create a
-    Razorpay order (`POST /checkout`), verify a completed payment + grant credits
-    (`POST /verify`), and a `payment.captured` webhook backstop (`POST /webhook`,
-    mounted with a raw-body parser BEFORE `express.json()` in `index.ts` so the
-    signature can be checked against the exact bytes).
-  - `src/lib/credits.ts` — credit ledger helpers + pricing. `actionCost()` returns
-    the FIXED credit price per action (`CREDITS_PER_{IMAGE,VIDEO,TEMPLATE_RENDER}`
-    env). `spendCredits()` is an atomic conditional decrement (can't go negative),
-    `refundCredits()` is net-aware/idempotent (so a charge→refund→re-charge retry
-    works and double callbacks don't double-refund), `addCredits()` grants
-    PURCHASE/BONUS/REFUND/ADJUSTMENT. `CREDIT_PACKS` defines the 3 INR top-up tiers.
-  - `src/lib/razorpay.ts` — minimal Razorpay client over the REST API (no SDK dep):
-    `createOrder`, `verifyPaymentSignature` (HMAC of `orderId|paymentId`), and
-    `verifyWebhookSignature`.
-- `infra/facefusion` — Dockerfile + `server.py`: a tiny FastAPI wrapper around
-  FaceFusion's `headless-run` CLI (3.6.1 ships no REST API). Exposes
-  `POST /swap` (multipart source+target → swapped image) + `GET /health`.
-  `entrypoint.sh` pre-downloads the `lite` model set (`force-download
-  --download-scope lite`) on first boot into the `facefusion_data` volume
-  (`/facefusion/.assets`), gated by a marker file so restarts are instant. The swap
-  runs a **max-likeness** config (env-tunable, see below): `hyperswap_1a_256` swapper
-  + `1024x1024` pixel boost + box/occlusion mask + a tight `0.2` mask blur + lossless
-  output, plus a `gfpgan_1.4` face-enhancer pass kept at a **low blend (30)** so it
-  restores detail without averaging out the source person's features. Tune via env on
-  the `facefusion` service: `FACE_SWAPPER_MODEL`, `FACE_SWAPPER_PIXEL_BOOST`,
-  `FACE_ENHANCER_ENABLED` (set false for the strongest, roughest likeness),
-  `FACE_ENHANCER_MODEL`, `FACE_ENHANCER_BLEND`, `FACE_MASK_BLUR`. (CPU
-  execution.) The extra models that config needs beyond `lite` (hyperswap, GFPGAN,
-  occluder) download lazily on the first swap, then cache in the volume — so only the
-  first swap is slow. (`full` scope is avoided: it greedily pulls many unrelated heavy
-  models and a single corrupt source aborts the whole pre-download.)
-- `packages/db` — Prisma schema (`prisma/schema.prisma`) + client (`@repo/db`).
-  Models: `Video`, `Image`, `FaceSwap` (shared `GenerationStatus` enum), plus the
-  templates feature: `Avatar`, `Template`, `TemplateBlock`, `TemplateAudioClip`,
-  `TemplateRender`, and a `role` field on `User` (`"user"`/`"admin"`). The credits
-  feature adds a `credits` balance on `User`, the `CreditTransaction` ledger
-  (`CreditTxnType`) and `Payment` rows (`PaymentStatus`) for Razorpay orders.
-  Reused by the backend; never duplicate Prisma logic elsewhere.
+Do not treat the old product identity as the current product direction.
 
-## Conventions
+### Source of truth
 
-- Package manager is **bun**. Use `bun install`, `bun run <script>`.
-- Backend imports use `.js` extensions (NodeNext); bun resolves them to `.ts` at runtime.
-- Frontend uses the `@/` alias for `src/`.
-- Keep all Prisma access in the `@repo/db` package.
-- All user-uploaded inputs and generated outputs (videos, images, face swaps) must
-  be stored in the object store (MinIO) — see `src/lib/storage.ts`. Object keys are
-  persisted on the `Video`/`Image`/`FaceSwap` models; the bucket is anonymous-read,
-  so the API returns permanent public URLs (`getPublicUrl`) built from
-  `MINIO_FRONTEND_ENDPOINT`.
-- Generation is **synchronous**: routes create a DB row (`IN_PROGRESS`), call the
-  provider, store the result and mark `COMPLETED`/`FAILED`. Mirror this pattern and
-  reuse `src/lib/uploads.ts` when adding new media types. Template renders follow
-  the same pattern (`TemplateRender` row → render → store), but a render generates
-  *every* block sequentially, so it can take many minutes.
-- **Template avatars**: the admin assigns 1-2 of their own avatars to a template at
-  creation (`Template.avatarIds`, which sets `avatarSlots`). Blocks pick one of
-  those slots (`TemplateBlock.avatarSlot`) for both the reference image and the
-  face-swap source — admins never re-upload per-block reference images. Admin
-  `/export` renders with the template's own avatars; users pick their own avatars
-  (same slot count) when they render via `POST /api/templates/:id/render`.
-- **Durations are per-model** (spec 09): OpenRouter exposes `supported_durations`
-  per video model; the UI offers a fixed set (`ALLOWED_DURATIONS` in `lib/api.ts`)
-  and filters the model picker to models that support the chosen duration. A
-  block's `duration` is its generated length and equals its timeline footprint
-  (`endSec = startSec + duration`, enforced server-side).
-- **Multi-track timeline + overlaps**: blocks have a `track`; the timeline stacks
-  tracks (higher = on top). Clips can be dragged left/right and between tracks, but
-  a drag that would overlap another clip **on the same track** is rejected (it turns
-  red and snaps back — `collides()` in `Timeline.tsx`); cross-track overlaps are
-  allowed. Rendering (`buildTimelineSegments` in `templateRender.ts`) slices the
-  timeline at block edges, picks the topmost covering block per slice (trimming via
-  `ffmpeg.ts`'s `stitchTimeline`), and fills uncovered gaps with black.
-- **Crop (trim)**: a block keeps its full generated clip (`duration`) but only uses
-  `[cropStart, cropEnd)` — drag a clip's edges to crop/expand (Premiere-style). The
-  footprint is `endSec - startSec = (cropEnd ?? duration) - cropStart` (enforced
-  server-side); `buildTimelineSegments` offsets the clip in-point by `cropStart`.
-- **Uploaded (non-AI) video blocks**: an admin can add a block backed by a raw
-  uploaded video instead of an AI-generated clip — `TemplateBlock.sourceVideoKey`
-  (created via the "Upload video" button on the editor; `POST …/blocks` with a
-  `sourceVideo` multipart field, served by `videoUpload` in `uploads.ts`). The
-  block's `duration` is the clip's real length (probed by `probeVideoDuration` in
-  `ffmpeg.ts` via ffprobe), so it crops/moves like any clip. `prompt`/`model` are
-  empty for these blocks and `renderBlockClip()`/baking are skipped — the render
-  (`templateRender.ts`) uses `sourceVideoKey` verbatim, **always** (even on user
-  renders where `forceRegenerate` is set), with no avatar/face-swap applied.
-- **Face-swap provider**: `SWAP_PROVIDER` selects how a block's start/end frame is
-  swapped in `renderBlockClip` — `facefusion` (default, pixel swap) or `flux`
-  (diffusion identity edit via `OPENROUTER_SWAP_MODEL`, which accepts the block's
-  `swapContext` prompt). The inspector exposes `swapContext` (shown only when a
-  face-swap toggle is on); it's shared across a link group like other content.
-- **Audio clips + auto length**: templates have no upfront duration or single
-  audio track. The admin uploads any number of audio files as `TemplateAudioClip`s
-  (the "Upload audio" button → `POST …/audio`); each is placed on an audio lane
-  (`track`), can be dragged/cropped like a video block, and its `duration` is the
-  uploaded file's real length (probed via ffprobe). All audio clips are **mixed**
-  together over the video on render (overlaps on the same lane are rejected like
-  video; cross-lane overlaps are allowed + summed). The timeline length is derived
-  from the furthest clip (video or audio) everywhere — there is no `durationSec`.
-- **Copy/paste with linked references**: blocks sharing a `linkGroupId` share
-  generation content (prompt, model, frames, baked `videoKey`, …). The copy endpoint
-  (`POST …/blocks/:id/copy`) clones content into a new linked block; editing or
-  baking any member propagates content to the rest (PATCH/bake in `adminTemplates.ts`).
-  Position + crop stay per-block. Frontend: ⌘/Ctrl+C / +V or the Copy/Paste buttons.
-- **Admins** are determined by `role == "admin"` on `User`, seeded from the
-  `ADMIN_EMAILS` allowlist. Gate admin-only routes with `requireAdmin`; the
-  frontend reads `/api/me`.
-- **Credits**: users buy credits (Razorpay, INR) on `/billing` and spend a FIXED
-  number per generation — `actionCost()` in `src/lib/credits.ts`. Every billable
-  route (`videos`, `images`, template `render`/`retry`) follows the same pattern:
-  reject up front with **402** if the balance is too low, `spendCredits()` once the
-  DB row exists, and `refundCredits()` on failure (synchronous routes in their
-  catch; template renders in the background `.catch`). Admin `/export` and per-block
-  `/bake` are NOT charged (they're authoring tools). The frontend shows the balance
-  in the navbar (`useMe().credits`); call `refreshCredits()` after any spend/top-up
-  so it updates immediately. Pricing defaults assume ~30% margin over typical
-  OpenRouter cost — raise `CREDITS_PER_*` for pricier model mixes.
-- Local host-based template rendering needs **ffmpeg on PATH** (it's installed in
-  the backend Docker image, but install it locally — e.g. `brew install ffmpeg` —
-  to run renders outside Docker).
+For product, UX, branding, roadmap, and migration direction:
 
-## Common commands
+1. `spec/CRE8_AI_SPEC.md`
+2. `spec/CRE8_AI_LOOP_ENGINEERING.md`
+
+For current technical implementation and safety invariants:
+
+1. `AGENTS.md`
+2. Current codebase
+3. `CLAUDE.md`
+
+If the active cre8.ai product specification conflicts with an existing technical invariant, do not silently rewrite the subsystem. Preserve working behavior, report the conflict, and follow the phased migration process in `spec/CRE8_AI_LOOP_ENGINEERING.md`.
+
+---
+
+# 1. Product overview
+
+## Active product
+
+**cre8.ai** is an **AI Marketing Department / Marketing Operating System** evolving from an existing generative-media SaaS.
+
+The existing application already contains working AI media-generation, templates, credits, billing, authentication, storage, and demo capabilities. These are valuable production assets and must be preserved while being repositioned inside the new cre8.ai architecture.
+
+The target high-level product model is:
+
+```text
+User
+  ↓
+Brand Workspace
+  ↓
+Brand Memory
+  ↓
+Mission Control
+  ↓
+Marketing Departments
+  ↓
+Department Tools
+  ↓
+Outputs / History / Insights
+```
+
+## cre8.ai departments
+
+### Chief Marketing Officer
+- Generate Marketing Strategies
+- Generate Trend Intelligence
+
+### Marketing Director
+- Generate Marketing Campaigns
+- Generate Digital Marketing
+
+### Head of Brand & Creative
+- Generate AI Images
+- Generate AI Videos
+- Generate AI Music
+- Generate Logos
+- Generate Presentations
+- Generate Hashtags
+
+### Head of Content Marketing
+- Generate Captions
+- Generate Prompts
+
+### Head of Social Media
+- Generate AI Voiceovers
+- Generate AI Avatars
+- Generate Auto-Posting
+
+### Marketing Analytics Manager
+- Generate AI Reports
+- Generate AI Insights
+
+Existing AI Image, AI Video, Templates and Avatar functionality should be migrated primarily under **Head of Brand & Creative** without rewriting the generation engine.
+
+## Core shared intelligence
+
+**AI Brand Memory** is a planned core foundation for cre8.ai.
+
+Brand Memory will become shared context for departments and tools, including:
+- brand identity
+- logo/colors/fonts
+- products/services
+- audience
+- market
+- tone of voice
+- positioning
+- competitors
+- approved messaging
+- prior campaign context
+- brand documents/assets
+
+Do not document or assume Brand Memory backend models as implemented until the code actually contains them.
+
+## Deferred / planned features
+
+The following are acknowledged but are not current implementation priorities unless explicitly activated in a later unit:
+
+- CRM
+- Task Management
+- Invoice Generator
+- deep Meta Ads execution
+- broad social-platform auto-posting integrations
+- advanced attribution / enterprise analytics
+
+Do not falsely present planned integrations as production-ready.
+
+---
+
+# 2. Repository overview
+
+This is a **bun-managed Turborepo monorepo**.
+
+- `apps/frontend` — React + Vite + TypeScript SPA, Tailwind v4, shadcn-style UI
+- `apps/backend` — TypeScript + Express API, run directly with bun
+- `packages/db` — Prisma schema + generated client shared by the backend
+- `infra/facefusion` — self-hosted FaceFusion service wrapper
+- `spec/` — active cre8.ai product and engineering specifications
+
+Package manager: **bun**.
+
+Do not introduce npm/pnpm/yarn workflows unless explicitly requested.
+
+---
+
+# 3. Current frontend implementation
+
+The current frontend is still in a migration state. It contains the newer public landing experience and the legacy media-generation application.
+
+### Current routes
+
+Verify against `apps/frontend/src/App.tsx` before editing route behavior.
+
+Expected current routes include:
+
+- `/` — public landing page
+- `/login`
+- `/video`
+- `/image`
+- `/face-swap`
+- `/user/templates`
+- `/user/avatar`
+- `/generation/:id`
+- `/billing`
+- `/admin/template/create`
+- legal pages
+
+If the actual `App.tsx` differs, **the current code wins for current-state facts**.
+
+### Target route direction
+
+The target cre8.ai structure is defined in `spec/CRE8_AI_SPEC.md`.
+
+Do not rename all existing routes at once. Migrate incrementally and preserve compatibility while the new architecture is introduced.
+
+---
+
+# 4. Frontend architecture and conventions
+
+- React + Vite + TypeScript
+- Tailwind v4
+- shadcn-style UI primitives under `apps/frontend/src/components/ui`
+- `@/` alias points to `src/`
+- auth client lives in `src/lib/auth-client.ts`
+- API calls are centralized in `src/lib/api.ts`
+- `/api/me` is consumed through `src/lib/useMe.ts`
+- Demo Mode is implemented in the frontend and must remain isolated from real backend behavior
+
+## Demo Mode
+
+The current client-demo environment is controlled through:
+
+```env
+VITE_DEMO_MODE=true
+```
+
+Demo Mode exists to show the product without depending on the production backend.
+
+Current safety expectations:
+- fixed demo account only
+- mock/sample data
+- non-admin demo user
+- no real payment
+- no real backend writes
+- no production secrets in `VITE_*`
+- real mode must remain unchanged when Demo Mode is disabled
+
+The current demo login used for presentation is:
+
+```text
+demo@content.ai
+demo1234
+```
+
+This legacy-visible email may later be rebranded to cre8.ai in a dedicated migration unit. Do not change auth/demo behavior casually during unrelated visual work.
+
+---
+
+# 5. Backend architecture
+
+`apps/backend` is a TypeScript + Express API run directly with bun.
+
+Backend imports use `.js` extensions under NodeNext; bun resolves them to `.ts` at runtime.
+
+Important modules include:
+
+- `src/auth.ts` — better-auth with Prisma adapter
+- `src/lib/openrouter.ts` — video/image generation and model listing
+- `src/lib/facefusion.ts` — FaceFusion / swap-provider integration
+- `src/lib/storage.ts` — MinIO / S3-compatible storage
+- `src/lib/uploads.ts` — shared upload handling
+- `src/lib/ffmpeg.ts` — ffmpeg/ffprobe media operations
+- `src/lib/templateRender.ts`
+- `src/lib/runRender.ts`
+- `src/lib/templateSerialize.ts`
+- `src/middleware/requireAdmin.ts`
+- `src/routes/videos.ts`
+- `src/routes/images.ts`
+- `src/routes/faceswaps.ts`
+- `src/routes/avatars.ts`
+- `src/routes/templates.ts`
+- `src/routes/adminTemplates.ts`
+- `src/routes/me.ts`
+- `src/routes/models.ts`
+- `src/routes/credits.ts`
+
+Do not duplicate backend responsibilities in the frontend.
+
+---
+
+# 6. Database / Prisma rules
+
+`packages/db` is the only place Prisma schema logic should be changed.
+
+The backend imports the generated client through `@repo/db`.
+
+Current models include the legacy media-generation and template system, including:
+- User
+- Video
+- Image
+- FaceSwap
+- Avatar
+- Template
+- TemplateBlock
+- TemplateAudioClip
+- TemplateRender
+- CreditTransaction
+- Payment
+
+Brand Workspace / Brand Memory models are **planned** and must be designed in a dedicated cre8.ai unit before implementation.
+
+Never create speculative database models because they may be useful later.
+
+Every new backend model requires:
+- defined user behavior
+- ownership
+- permissions
+- API contract
+- migration plan
+- verification
+
+---
+
+# 7. Existing generation behavior that must be preserved
+
+Existing media generation is a critical reusable subsystem.
+
+Current pattern:
+1. create DB row as `IN_PROGRESS`
+2. call provider synchronously
+3. persist result to object storage
+4. mark `COMPLETED` or `FAILED`
+5. charge/refund credits according to existing invariants
+
+When adding or migrating media tools, preserve this pattern unless a dedicated architecture unit explicitly replaces it.
+
+Do not rebuild working image/video generation merely to fit new navigation.
+
+---
+
+# 8. Storage rules
+
+All uploaded and generated user media must go through MinIO / object storage.
+
+Do not store user-generated production media on local disk.
+
+Relevant modules:
+- `src/lib/storage.ts`
+- `src/lib/uploads.ts`
+
+Do not rename production buckets or storage identifiers during branding work.
+
+---
+
+# 9. Credits and billing invariants
+
+Credits are safety-sensitive.
+
+Current behavior includes:
+- fixed credit cost per billable generation action
+- atomic decrement
+- 402 on insufficient balance
+- idempotent/net-aware refund behavior
+- purchase ledger
+- Razorpay payment verification
+- webhook signature verification
+
+Do not alter these invariants during UI migration.
+
+The public demo must keep payment disabled.
+
+Real Razorpay behavior must remain unchanged when Demo Mode is off.
+
+---
+
+# 10. Admin and permissions
+
+Admins are determined by the current `User.role` / admin resolution flow documented in the backend.
+
+Admin-only routes must remain protected by backend authorization.
+
+Frontend visibility is not a security boundary.
+
+The public Demo Mode user is non-admin and must not gain admin access through visual/navigation changes.
+
+---
+
+# 11. Template editor / timeline — high risk
+
+The admin template editor under `apps/frontend/src/components/timeline/` is a hand-built Premiere-style multi-track editor.
+
+Before changing it, understand:
+- multi-track video lanes
+- audio lanes
+- drag behavior
+- same-track collision rejection
+- cross-track overlap support
+- crop/trim semantics
+- timeline auto-length
+- linked blocks / `linkGroupId`
+- copy/paste semantics
+- bake behavior
+- uploaded-video blocks
+- program monitor playback
+- audio synchronization
+- export/render behavior
+
+Do not refactor timeline behavior during ordinary cre8.ai rebranding or navigation work.
+
+---
+
+# 12. Template / render invariants
+
+Important current behavior:
+- templates have no fixed upfront duration
+- timeline length is derived from furthest video/audio content
+- admins can add uploaded non-AI video blocks
+- uploaded blocks bypass AI regeneration
+- avatars are assigned by slot
+- audio clips can be placed/cropped across lanes
+- render pipeline mixes audio and stitches visible video timeline segments
+- per-block bake/export behavior is intentionally separate
+- export thumbnails may use AI generation with fallback
+
+Do not simplify these systems without a dedicated migration unit.
+
+---
+
+# 13. Face swap
+
+Face swap currently supports a provider abstraction.
+
+`SWAP_PROVIDER` may select:
+- `facefusion`
+- `flux`
+
+Keep provider-specific logic in the backend.
+
+---
+
+# 14. cre8.ai migration principles
+
+Every migration unit must follow:
+
+```text
+Inspect
+→ Understand
+→ Scope
+→ Plan
+→ Implement
+→ Verify
+→ Review
+```
+
+Do not perform a big-bang rewrite.
+
+Prefer:
+- wrapping current generators in new department workspaces
+- new navigation around working functionality
+- shared Brand context layers
+- compatibility routes
+- small, testable units
+
+Avoid:
+- rewriting working generators
+- global renames of technical identifiers
+- deleting legacy systems before replacement is verified
+- introducing fake integrations
+- adding speculative backend complexity
+
+---
+
+# 15. Public vs authenticated design
+
+Public pages may be cinematic and space-inspired.
+
+Use:
+- black
+- deep navy
+- electric blue
+- cyan
+- restrained glass
+- subtle stars/orbits
+- premium motion
+
+Authenticated application screens must prioritize usability.
+
+Use the space/mission-control metaphor for:
+- landing
+- departments
+- transitions
+- branding
+
+Use a practical Mission Control/workspace pattern for:
+- daily creation
+- Brand Memory
+- generators
+- history
+- campaigns
+- analytics
+
+Do not turn every authenticated screen into an orbital animation.
+
+---
+
+# 16. Brand Memory engineering rule
+
+Any feature claiming Brand Memory support must explicitly document which fields it consumes.
+
+Example:
+
+```text
+Caption Generator consumes:
+- tone
+- audience
+- language
+- products
+- approved keywords
+```
+
+Do not blindly append a complete Brand Memory record into prompts.
+
+---
+
+# 17. External integration rule
+
+Classify external features as:
+
+```text
+REAL
+DEMO
+PLANNED
+```
+
+Examples:
+- social auto-posting
+- Meta Ads execution
+- trend providers
+- music providers
+- presentation generation
+- analytics connectors
+
+Never claim a planned integration works because a UI exists.
+
+---
+
+# 18. Legacy names
+
+Legacy names may still exist:
+
+- Pixovid
+- Video Arena
+- content.ai
+- `video-arena`
+- deployment identifiers
+- package names
+- storage names
+
+Before renaming any occurrence, classify it:
+
+A. public product identity → migrate to `cre8.ai`  
+B. internal package/repository identifier → usually retain  
+C. production/deployment/storage identifier → do not rename blindly  
+D. historical comment/context → update only if misleading
+
+Never run an uncontrolled global replacement.
+
+---
+
+# 19. Common commands
 
 ```sh
-bun install                 # install all workspace deps
-bun run db:generate         # generate the Prisma client (run after schema changes)
-bun run db:migrate          # apply Prisma migrations
-bun run dev                 # run all apps with hot reload (turbo)
-bun run build               # build everything
-bun run check-types         # type-check the whole monorepo
-bun run lint                # lint
+bun install
+bun run dev
+bun run build
+bun run check-types
+bun run lint
+bun run format
+
+bun run db:generate
+bun run db:push
+bun run db:migrate
+bun run db:studio
 ```
 
 Per app:
 
 ```sh
 bun run --cwd apps/backend dev
+bun run --cwd apps/backend start
+bun run --cwd apps/backend lint
+
 bun run --cwd apps/frontend dev
+bun run --cwd apps/frontend build
+bun run --cwd apps/frontend lint
 ```
 
-## Local infrastructure
+---
+
+# 20. Local infrastructure
 
 ```sh
-bun run infra:up            # Postgres + MinIO only (for host-based dev)
-bun run docker:up           # full stack in Docker
-bun run docker:facefusion   # build + start the FaceFusion swap service (~5GB, needed for face swap)
-bun run docker:reset        # stop + wipe volumes (DESTRUCTIVE)
+bun run infra:up
+bun run docker:up
+bun run docker:facefusion
+bun run docker:down
+bun run docker:reset
 ```
 
-## Verification
+`docker:reset` is destructive.
 
-Before considering a change complete:
+Never run destructive infrastructure commands without explicit approval.
 
-1. `bun run check-types` (must pass).
-2. `bun run build` (frontend `vite build` + backend `tsc --noEmit`).
-3. For backend logic, smoke-test by booting `bun run --cwd apps/backend start`
-   and hitting `http://localhost:4000/health`.
+---
 
-## Environment
+# 21. Verification
 
-Secrets (`OPENROUTER_API_KEY`, `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`,
-`BETTER_AUTH_SECRET`) are configured via `.env`. See the `.env.example` files at
-the repo root and in each app/package. Google sign-in is only enabled when the
-Google client id/secret are present. `FACEFUSION_URL` points the backend at the
-FaceFusion swap service (`http://localhost:7865` on host, `http://facefusion:7865`
-in Docker).
+Before considering a code change complete:
+
+1. `bun run check-types`
+2. `bun run --cwd apps/frontend build`
+3. For backend changes, smoke-test the backend where feasible.
+4. For visual changes, inspect actual rendering in a browser if browser access exists.
+5. For Demo Mode changes, verify both demo and real mode.
+6. Confirm unrelated protected systems remain unchanged.
+
+Do not claim visual verification without actually viewing the rendered result.
+
+---
+
+# 22. Environment
+
+Secrets are configured through environment files / deployment environment variables.
+
+Never expose secrets through `VITE_*` variables because Vite embeds them into the client bundle.
+
+Examples of backend-only secrets:
+- `OPENROUTER_API_KEY`
+- `BETTER_AUTH_SECRET`
+- Google OAuth secret
+- Razorpay secret
+- MinIO credentials
+- database connection strings
+
+---
+
+# 23. Definition of done
+
+A cre8.ai implementation unit is complete only when:
+
+- its scope is satisfied
+- unrelated working behavior is preserved
+- type-check passes
+- build passes
+- unit-specific verification is complete
+- Demo Mode impact is understood
+- responsive impact is reviewed for visual units
+- known limitations are documented
+
+The migration succeeds when the existing working generative-media system has evolved into a coherent cre8.ai AI Marketing Department without losing the functionality already built.

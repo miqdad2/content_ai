@@ -6,13 +6,13 @@ export function RefundPage() {
   return (
     <LegalPage title="Refund & Cancellation Policy" updated="June 30, 2026">
       <p className="text-sm leading-7 text-muted-foreground">
-        This Refund &amp; Cancellation Policy explains how purchases of credits on content.ai are
+        This Refund &amp; Cancellation Policy explains how purchases of credits on cre8.ai are
         handled. Please read it carefully before making a payment.
       </p>
 
       <LegalSection heading="Credits and digital goods">
         <p>
-          content.ai sells prepaid <strong>credits</strong> that are consumed when you generate
+          cre8.ai sells prepaid <strong>credits</strong> that are consumed when you generate
           videos, images, or template renders. Credits are digital goods that are delivered to your
           account immediately after a successful payment.
         </p>

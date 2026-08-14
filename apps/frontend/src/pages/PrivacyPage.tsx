@@ -6,7 +6,7 @@ export function PrivacyPage() {
   return (
     <LegalPage title="Privacy Policy" updated="June 30, 2026">
       <p className="text-sm leading-7 text-muted-foreground">
-        content.ai (&ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;) is committed to
+        cre8.ai (&ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;) is committed to
         protecting your privacy. This Privacy Policy explains what information we collect, how we
         use it, and the choices you have. By using our website and services you agree to the
         practices described below.

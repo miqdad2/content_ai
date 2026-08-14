@@ -2,7 +2,7 @@ import { Aperture } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LogoProps {
-  /** Show the "content.ai" wordmark next to the mark. Defaults to true. */
+  /** Show the "cre8.ai" wordmark next to the mark. Defaults to true. */
   showWordmark?: boolean;
   size?: "sm" | "default" | "lg";
   className?: string;
@@ -20,7 +20,7 @@ const ICON_SIZE: Record<NonNullable<LogoProps["size"]>, string> = {
 };
 
 /**
- * The content.ai mark: a violet→cyan gradient tile with an aperture glyph,
+ * The cre8.ai mark: a blue→cyan gradient tile with an aperture glyph,
  * used identically in the navbar, footer and auth screens so the brand stays
  * consistent. Placeholder pending an approved logo asset — swap the icon/
  * gradient here once one exists; every usage site updates automatically.
@@ -41,7 +41,7 @@ export function Logo({ showWordmark = true, size = "default", className }: LogoP
       </span>
       {showWordmark && (
         <span className="hidden text-[15px] font-semibold tracking-tight sm:inline">
-          content<span className="text-brand-2">.ai</span>
+          cre8<span className="text-brand-2">.ai</span>
         </span>
       )}
     </span>
